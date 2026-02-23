@@ -37,25 +37,34 @@ app.use((req, res, next) => {
 //   queueLimit: 0,
 // });
 
+
 const pool = mysql.createPool({
   host: process.env.MYSQLHOST,
   user: process.env.MYSQLUSER,
   password: process.env.MYSQLPASSWORD,
   database: process.env.MYSQLDATABASE,
-  port: process.env.MYSQLPORT ? Number(process.env.MYSQLPORT) : 3306,
+  port: process.env.MYSQLPORT
+    ? Number(process.env.MYSQLPORT)
+    : 3306,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
 });
 
 
+// console.log("DB Config:", {
+//   host: process.env.DB_HOST,
+//   user: process.env.DB_USER,
+//   password: process.env.DB_PASSWORD ? "***" : "",
+//   database: process.env.DB_NAME,
+//   port: process.env.DB_PORT || 3306,
+// });
 
 console.log("DB Config:", {
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD ? "***" : "",
-  database: process.env.DB_NAME,
-  port: process.env.DB_PORT || 3306,
+  host: process.env.MYSQLHOST,
+  user: process.env.MYSQLUSER,
+  database: process.env.MYSQLDATABASE,
+  port: process.env.MYSQLPORT,
 });
 
 // Test connection
@@ -117,7 +126,7 @@ app.get("/api/health", (req, res) => {
 // Servir archivos estáticos del frontend compilado
 app.use(express.static(path.join(__dirname, "dist")));
 
-// Redirect all non-API routes to index.html (for React Router)
+// Redirecccionar todas las rutas al index.html para manejo del routing en frontend
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "dist", "index.html"));
 });
@@ -127,7 +136,7 @@ async function initializeDatabase() {
   let connection;
   try {
     connection = await pool.connect();
-    console.log("🔧 Inicializando base de datos...");
+    console.log(" Inicializando base de datos...");
 
     // Ejecutar archivos SQL críticos
     const sqlFiles = ["init.sql", "create_orders_tables.sql"];
@@ -162,7 +171,7 @@ async function initializeDatabase() {
 
     // Asegurar que suppliers tiene las columnas is_active y category
     try {
-      console.log("🔧 Verificando columnas de suppliers...");
+      console.log(" Verificando columnas de suppliers...");
 
       // Verificar y agregar is_active
       try {
@@ -192,10 +201,10 @@ async function initializeDatabase() {
       await connection.query(
         "UPDATE suppliers SET is_active = TRUE WHERE is_active IS NULL",
       );
-      console.log("  ✓ Suppliers verificados\n");
+      console.log("   Suppliers verificados\n");
 
       // Migrar números de orden de SO- a VNT- (órdenes de venta antiguas)
-      console.log("🔧 Migrando números de orden de venta (SO- a VNT-)...");
+      console.log(" Migrando números de orden de venta (SO- a VNT-)...");
       try {
         const soOrders = await connection.query(
           "SELECT COUNT(*) as count FROM sales_orders WHERE order_number LIKE 'SO-%'",
