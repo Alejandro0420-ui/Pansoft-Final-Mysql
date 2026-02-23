@@ -42,7 +42,7 @@ console.log("DB Config:", {
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD ? "***" : "",
   database: process.env.DB_NAME,
-  port: process.env.DB_PORT || 5432,
+  port: process.env.DB_PORT || 3306,
 });
 
 // Test connection
@@ -124,18 +124,6 @@ async function initializeDatabase() {
       if (fs.existsSync(filePath)) {
         let sql = fs.readFileSync(filePath, "utf-8");
 
-        // Convertir sintaxis MySQL a PostgreSQL
-        sql = sql
-          .replace(/AUTO_INCREMENT/g, "GENERATED ALWAYS AS IDENTITY")
-          .replace(/CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci/g, "")
-          .replace(/COLLATE utf8mb4_unicode_ci/g, "")
-          .replace(/CHARSET utf8mb4/g, "")
-          .replace(/ENGINE=InnoDB/g, "")
-          .replace(/CONCAT\(/g, "CONCAT_WS('',")
-          .replace(/YEAR\(/g, "EXTRACT(YEAR FROM (")
-          .replace(/SUBSTRING/g, "SUBSTR")
-          .replace(/LPAD/g, "LPAD");
-
         const queries = sql.split(";").filter((q) => q.trim());
 
         for (const query of queries) {
@@ -149,7 +137,7 @@ async function initializeDatabase() {
                 !error.message.includes("CONSTRAINT") &&
                 !error.message.includes("foreign key")
               ) {
-                console.warn(`  ⚠️  ${file}: ${error.message}`);
+                console.warn(`    ${file}: ${error.message}`);
               }
             }
           }
@@ -202,7 +190,7 @@ async function initializeDatabase() {
         const count = parseInt(soOrders.rows[0]?.count || 0);
         if (count > 0) {
           await connection.query(
-            "UPDATE sales_orders SET order_number = 'VNT-' || SUBSTRING(order_number, 4) WHERE order_number LIKE 'SO-%'",
+            "UPDATE sales_orders SET order_number = CONCAT('VNT-', SUBSTRING(order_number, 4)) WHERE order_number LIKE 'SO-%'",
           );
           console.log(`  ✓ ${count} órdenes de venta migradas de SO- a VNT-`);
         }
@@ -215,7 +203,7 @@ async function initializeDatabase() {
         if (oldCount > 0) {
           await connection.query(`
             UPDATE sales_orders 
-            SET order_number = 'VNT-' || EXTRACT(YEAR FROM order_date)::TEXT || '-' || LPAD(SUBSTRING(order_number, 5), 3, '0')
+            SET order_number = CONCAT('VNT-', YEAR(order_date), '-', LPAD(SUBSTRING(order_number, 5), 3, '0'))
             WHERE order_number LIKE 'VNT-%' AND order_number NOT LIKE 'VNT-20%' AND order_number NOT LIKE 'VNT-21%'
           `);
           console.log(
