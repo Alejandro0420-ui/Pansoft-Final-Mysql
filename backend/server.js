@@ -38,18 +38,7 @@ app.use((req, res, next) => {
 // });
 
 
-const pool = mysql.createPool({
-  host: process.env.MYSQLHOST,
-  user: process.env.MYSQLUSER,
-  password: process.env.MYSQLPASSWORD,
-  database: process.env.MYSQLDATABASE,
-  port: process.env.MYSQLPORT
-    ? Number(process.env.MYSQLPORT)
-    : 3306,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
-});
+const pool = mysql.createPool(process.env.MYSQL_URL);
 
 
 // console.log("DB Config:", {
@@ -135,7 +124,7 @@ app.get("*", (req, res) => {
 async function initializeDatabase() {
   let connection;
   try {
-    connection = await pool.connect();
+    connection = await pool.query();
     console.log(" Inicializando base de datos...");
 
     // Ejecutar archivos SQL críticos
