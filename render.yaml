@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: pansoft-backend
+    runtime: node
+    region: oregon
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: DB_HOST
+        reference: pansoft-db.PGHOST
+      - key: DB_USER
+        reference: pansoft-db.PGUSER
+      - key: DB_PASSWORD
+        reference: pansoft-db.PGPASSWORD
+      - key: DB_NAME
+        reference: pansoft-db.PGDATABASE
+      - key: DB_PORT
+        reference: pansoft-db.PGPORT
+databases:
+  - name: pansoft-db
+    databaseName: pansoft_db
+    user: pansoft_user
+    region: oregon
+    plan: free
