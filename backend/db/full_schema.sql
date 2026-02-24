@@ -203,15 +203,5 @@ CREATE TABLE IF NOT EXISTS sales_reports (
 -- ============================================
 -- ÍNDICES PARA OPTIMIZACIÓN
 -- ============================================
-
-ALTER TABLE products ADD INDEX IF NOT EXISTS idx_products_category (category);
-ALTER TABLE products ADD INDEX IF NOT EXISTS idx_products_sku (sku);
-ALTER TABLE orders ADD INDEX IF NOT EXISTS idx_orders_customer (customer_id);
-ALTER TABLE orders ADD INDEX IF NOT EXISTS idx_orders_status (status);
-ALTER TABLE invoices ADD INDEX IF NOT EXISTS idx_invoices_customer (customer_id);
-ALTER TABLE invoices ADD INDEX IF NOT EXISTS idx_invoices_status (status);
-ALTER TABLE invoices ADD INDEX IF NOT EXISTS idx_invoices_due_date (due_date);
-ALTER TABLE employees ADD INDEX IF NOT EXISTS idx_employees_department (department);
-ALTER TABLE sales_orders ADD INDEX IF NOT EXISTS idx_sales_orders_customer (customer_id);
-ALTER TABLE production_orders ADD INDEX IF NOT EXISTS idx_production_orders_status (status);
-ALTER TABLE supplies ADD INDEX IF NOT EXISTS idx_supplies_sku (sku);
+-- Los índices se crearán manualmente si es necesario
+-- Por ahora omitimos para evitar errores de sintaxis
