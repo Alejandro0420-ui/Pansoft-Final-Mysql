@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation, Routes, Route } from "react-router-dom";
+import { getApiUrl } from "./config";
 import { Login } from "./components/login";
 import { Dashboard } from "./components/dashboard";
 import { Inventory } from "./components/inventory";
@@ -64,7 +65,7 @@ function App() {
     const fetchUnreadCount = async () => {
       try {
         const response = await fetch(
-          "http://localhost:5000/api/notifications/unread/count",
+          getApiUrl("/notifications/unread/count"),
         );
         const data = await response.json();
         setUnreadCount(data.unreadCount || 0);

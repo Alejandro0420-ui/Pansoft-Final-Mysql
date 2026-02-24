@@ -11,8 +11,9 @@ import {
   UserCheck,
   XCircle,
 } from "lucide-react";
+import { getApiUrl } from "../config";
 
-const API_URL = "http://localhost:5000/api";
+const API_URL = getApiUrl("");
 const suppliersAPI = {
   getAll: () =>
     fetch(`${API_URL}/suppliers`, {

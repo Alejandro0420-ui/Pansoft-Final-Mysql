@@ -213,7 +213,7 @@ export function ProductsSection({
                           <div className="d-flex align-items-center">
                             {item.image_url && (
                               <img
-                                src={`http://localhost:5000${item.image_url}`}
+                                src={getApiUrl(`${item.image_url}`)}
                                 alt={item.name}
                                 style={{
                                   width: "40px",
@@ -303,7 +303,7 @@ export function ProductsSection({
                   >
                     {item.image_url && (
                       <img
-                        src={`http://localhost:5000${item.image_url}`}
+                        src={getApiUrl(`${item.image_url}`)}
                         alt={item.name}
                         className="card-img-top"
                         style={{ height: "200px", objectFit: "cover" }}

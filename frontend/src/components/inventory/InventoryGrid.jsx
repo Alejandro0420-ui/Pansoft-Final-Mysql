@@ -1,4 +1,5 @@
 import { Edit, Trash2 } from "lucide-react";
+import { getApiUrl } from "../../config";
 
 export function InventoryGrid({
   items,
@@ -41,7 +42,7 @@ export function InventoryGrid({
                 >
                   {item.image_url ? (
                     <img
-                      src={`http://localhost:5000${item.image_url}`}
+                      src={getApiUrl(`${item.image_url}`)}
                       alt={item.name}
                       style={{
                         width: "100%",

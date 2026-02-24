@@ -8,6 +8,7 @@ import {
   AlertTriangle,
   ShoppingCart,
 } from "lucide-react";
+import { getApiUrl } from "../config";
 
 export function Notifications() {
   const [notifications, setNotifications] = useState([]);
@@ -39,14 +40,14 @@ export function Notifications() {
       setLoading(true);
       const queryParam = filter === "unread" ? "?unreadOnly=true" : "";
       const response = await fetch(
-        `http://localhost:5000/api/notifications${queryParam}`,
+        getApiUrl(`/notifications${queryParam}`),
       );
       const data = await response.json();
       setNotifications(data.notifications || []);
 
       // Cargar conteo de no leídas
       const countResponse = await fetch(
-        "http://localhost:5000/api/notifications/unread/count",
+        getApiUrl("/notifications/unread/count"),
       );
       const countData = await countResponse.json();
       setUnreadCount(countData.unreadCount || 0);
@@ -68,7 +69,7 @@ export function Notifications() {
   // Marcar como leída
   const markAsRead = async (id) => {
     try {
-      await fetch(`http://localhost:5000/api/notifications/${id}/read`, {
+      await fetch(getApiUrl(`/notifications/${id}/read`), {
         method: "PATCH",
       });
       fetchNotifications();
@@ -80,7 +81,7 @@ export function Notifications() {
   // Marcar todas como leídas
   const markAllAsRead = async () => {
     try {
-      await fetch("http://localhost:5000/api/notifications/read/all", {
+      await fetch(getApiUrl("/notifications/read/all"), {
         method: "PATCH",
       });
       fetchNotifications();
@@ -92,7 +93,7 @@ export function Notifications() {
   // Eliminar notificación
   const deleteNotification = async (id) => {
     try {
-      await fetch(`http://localhost:5000/api/notifications/${id}`, {
+      await fetch(getApiUrl(`/notifications/${id}`), {
         method: "DELETE",
       });
       fetchNotifications();
@@ -104,7 +105,7 @@ export function Notifications() {
   // Eliminar todas las leídas
   const deleteAllRead = async () => {
     try {
-      await fetch("http://localhost:5000/api/notifications/read/all", {
+      await fetch(getApiUrl("/notifications/read/all"), {
         method: "DELETE",
       });
       fetchNotifications();

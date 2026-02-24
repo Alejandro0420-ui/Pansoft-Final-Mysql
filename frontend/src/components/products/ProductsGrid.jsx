@@ -1,3 +1,5 @@
+import { getApiUrl } from "../../config";
+
 export function ProductsGrid({
   items,
   activeTab,
@@ -41,7 +43,7 @@ export function ProductsGrid({
             >
               {item.image_url ? (
                 <img
-                  src={`http://localhost:5000${item.image_url}`}
+                  src={getApiUrl(`${item.image_url}`)}
                   alt={item.name}
                   style={{
                     width: "100%",

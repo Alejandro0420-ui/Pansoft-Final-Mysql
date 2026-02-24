@@ -2,9 +2,10 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { Trash2, Plus, Minus, Printer, X } from "lucide-react";
 import { toast } from "sonner";
+import { getApiUrl } from "../../config";
 import "bootstrap/dist/css/bootstrap.min.css";
 
-const API_URL = "http://localhost:5000/api";
+const API_URL = getApiUrl("");
 
 export function SalesPoint() {
   const [products, setProducts] = useState([]);
@@ -251,7 +252,7 @@ export function SalesPoint() {
                     >
                       {product.image_url && (
                         <img
-                          src={`http://localhost:5000${product.image_url}`}
+                          src={getApiUrl(`${product.image_url}`)}
                           alt={product.name}
                           style={{
                             height: "120px",
