@@ -14,42 +14,14 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// CORS Configuration - Permitir múltiples origins para Railway
-const allowedOrigins = [
-  "http://localhost:3000", // Desarrollo local
-  "http://localhost:5173", // Vite development
-  process.env.FRONTEND_URL, // Desde variables de entorno
-].filter(Boolean);
-
-const corsOptions = {
-  origin: (origin, callback) => {
-    // Permite requests sin origin (like mobile apps) y localhost
-    if (!origin || origin.includes("localhost") || origin.includes("127.0.0.1")) {
-      callback(null, true);
-      return;
-    }
-    
-    // En producción, permitir de forma más flexible para Railway
-    if (process.env.NODE_ENV === "production") {
-      // Permitir cualquier origen en producción (ajustar si es necesario)
-      callback(null, true);
-      return;
-    }
-
-    // En desarrollo, solo permitir origins específicos
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
+// ✅ CORS Configuration - Simplificado para Railway
+app.use(cors({
+  origin: true, // Permitir todos los origins por ahora (Railway lo necesita)
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
-};
-
-// Middleware
-app.use(cors(corsOptions));
+  optionsSuccessStatus: 200
+}));
 app.use(express.json({ charset: "utf-8" }));
 app.use(express.static("uploads")); // Servir archivos estáticos
 
@@ -158,7 +130,7 @@ app.get("*", (req, res) => {
 async function initializeDatabase() {
   let connection;
   try {
-    connection = await pool.query();
+    connection = await pool.getConnection();
     console.log(" Inicializando base de datos...");
 
     // Ejecutar archivos SQL críticos
