@@ -14,8 +14,42 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// CORS Configuration - Permitir múltiples origins para Railway
+const allowedOrigins = [
+  "http://localhost:3000", // Desarrollo local
+  "http://localhost:5173", // Vite development
+  process.env.FRONTEND_URL, // Desde variables de entorno
+].filter(Boolean);
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Permite requests sin origin (like mobile apps) y localhost
+    if (!origin || origin.includes("localhost") || origin.includes("127.0.0.1")) {
+      callback(null, true);
+      return;
+    }
+    
+    // En producción, permitir de forma más flexible para Railway
+    if (process.env.NODE_ENV === "production") {
+      // Permitir cualquier origen en producción (ajustar si es necesario)
+      callback(null, true);
+      return;
+    }
+
+    // En desarrollo, solo permitir origins específicos
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
+
 // Middleware
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json({ charset: "utf-8" }));
 app.use(express.static("uploads")); // Servir archivos estáticos
 
