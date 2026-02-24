@@ -56,10 +56,10 @@ const pool = mysql.createPool(process.env.MYSQL_URL);
 // });
 
 console.log("DB Config:", {
-  host: process.env.MYSQLHOST,
-  user: process.env.MYSQLUSER,
-  database: process.env.MYSQLDATABASE,
-  port: process.env.MYSQLPORT,
+  host: process.env.MYSQLHOST?.trim(),
+  user: process.env.MYSQLUSER?.trim(),
+  database: process.env.MYSQLDATABASE?.trim(),
+  port: process.env.MYSQLPORT?.trim(),
 });
 
 // Test connection
