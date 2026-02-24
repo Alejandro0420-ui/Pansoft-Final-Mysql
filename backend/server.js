@@ -131,38 +131,66 @@ async function initializeDatabase() {
   let connection;
   try {
     connection = await pool.getConnection();
-    console.log(" Inicializando base de datos...");
+    console.log("📦 Inicializando base de datos...");
 
-    // Ejecutar archivos SQL críticos
-    const sqlFiles = ["init.sql", "create_orders_tables.sql"];
+    // Primero ejecutar el schema completo
+    const schemaPath = path.join(__dirname, "db", "full_schema.sql");
+    if (fs.existsSync(schemaPath)) {
+      console.log("  ✓ Ejecutando full_schema.sql...");
+      let schemaSQL = fs.readFileSync(schemaPath, "utf-8");
+      
+      // Dividir por declaraciones y ejecutar una por una
+      const queries = schemaSQL
+        .split(";")
+        .map((q) => q.trim())
+        .filter((q) => q && !q.startsWith("--"));
 
-    for (const file of sqlFiles) {
-      const filePath = path.join(__dirname, "db", file);
-      if (fs.existsSync(filePath)) {
-        let sql = fs.readFileSync(filePath, "utf-8");
+      for (const query of queries) {
+        try {
+          await connection.query(query);
+        } catch (err) {
+          // Ignorar errores de duplicación (tablas que ya existen)
+          if (!err.message.includes("already exists")) {
+            console.warn(`  ⚠️ ${err.message}`);
+          }
+        }
+      }
+      console.log("✓ Schema de base de datos inicializado\n");
+    } else {
+      console.warn(
+        "⚠️ full_schema.sql no encontrado, intentando con init.sql..."
+      );
+      // Fallback a init.sql y create_orders_tables.sql
+      const sqlFiles = ["init.sql", "create_orders_tables.sql"];
 
-        const queries = sql.split(";").filter((q) => q.trim());
+      for (const file of sqlFiles) {
+        const filePath = path.join(__dirname, "db", file);
+        if (fs.existsSync(filePath)) {
+          let sql = fs.readFileSync(filePath, "utf-8");
 
-        for (const query of queries) {
-          if (query.trim()) {
-            try {
-              await connection.query(query);
-            } catch (error) {
-              // Ignorar errores de tablas que ya existen
-              if (
-                !error.message.includes("already exists") &&
-                !error.message.includes("CONSTRAINT") &&
-                !error.message.includes("foreign key")
-              ) {
-                console.warn(`    ${file}: ${error.message}`);
+          const queries = sql
+            .split(";")
+            .map((q) => q.trim())
+            .filter((q) => q);
+
+          for (const query of queries) {
+            if (query.trim()) {
+              try {
+                await connection.query(query);
+              } catch (error) {
+                if (
+                  !error.message.includes("already exists") &&
+                  !error.message.includes("CONSTRAINT") &&
+                  !error.message.includes("foreign key")
+                ) {
+                  console.warn(`  ⚠️ ${file}: ${error.message}`);
+                }
               }
             }
           }
         }
       }
     }
-
-    console.log("✓ Base de datos inicializada correctamente\n");
 
     // Asegurar que suppliers tiene las columnas is_active y category
     try {
