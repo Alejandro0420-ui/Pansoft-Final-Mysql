@@ -22,6 +22,19 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization"],
   optionsSuccessStatus: 200
 }));
+
+// ✅ Prevenir caché en endpoints de API
+app.use((req, res, next) => {
+  // No cachear endpoints de API
+  if (req.url.startsWith('/api')) {
+    res.set({
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+    });
+  }
+  next();
+});
 app.use(express.json({ charset: "utf-8" }));
 app.use(express.static("uploads")); // Servir archivos estáticos
 
