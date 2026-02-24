@@ -67,10 +67,25 @@ function App() {
         const response = await fetch(
           getApiUrl("/notifications/unread/count"),
         );
+        
+        if (!response.ok) {
+          console.warn("Failed to fetch unread count:", response.status);
+          setUnreadCount(0);
+          return;
+        }
+        
         const data = await response.json();
-        setUnreadCount(data.unreadCount || 0);
+        
+        // Validar que unreadCount existe
+        if (typeof data.unreadCount === "number") {
+          setUnreadCount(data.unreadCount);
+        } else {
+          console.warn("Invalid unreadCount data:", data);
+          setUnreadCount(0);
+        }
       } catch (error) {
         console.error("Error obteniendo conteo de notificaciones:", error);
+        setUnreadCount(0);
       }
     };
 

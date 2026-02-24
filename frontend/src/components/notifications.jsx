@@ -42,17 +42,38 @@ export function Notifications() {
       const response = await fetch(
         getApiUrl(`/notifications${queryParam}`),
       );
+      
+      if (!response.ok) {
+        console.error("API error:", response.status, response.statusText);
+        setNotifications([]);
+        return;
+      }
+      
       const data = await response.json();
-      setNotifications(data.notifications || []);
+      
+      // Validar que data.notifications es un array
+      if (Array.isArray(data.notifications)) {
+        setNotifications(data.notifications);
+      } else if (Array.isArray(data)) {
+        setNotifications(data);
+      } else {
+        console.warn("Invalid notifications data:", data);
+        setNotifications([]);
+      }
 
       // Cargar conteo de no leídas
       const countResponse = await fetch(
         getApiUrl("/notifications/unread/count"),
       );
-      const countData = await countResponse.json();
-      setUnreadCount(countData.unreadCount || 0);
+      
+      if (countResponse.ok) {
+        const countData = await countResponse.json();
+        setUnreadCount(countData.unreadCount || 0);
+      }
     } catch (error) {
       console.error("Error cargando notificaciones:", error);
+      setNotifications([]);
+      setUnreadCount(0);
     } finally {
       setLoading(false);
     }
