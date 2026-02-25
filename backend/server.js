@@ -286,6 +286,8 @@ async function startServer() {
 
     app.listen(PORT, () => {
       console.log(`🚀 Servidor Pansoft ejecutándose en puerto ${PORT}`);
+      console.log(`✅ VERSIÓN ACTUALIZADA - API Routes están habilitadas correctamente`);
+      console.log(`✅ NO hay wildcard catch-all para frontend`);
 
       // ===== TAREAS PROGRAMADAS DE NOTIFICACIONES =====
       console.log("⏰ Configurando tareas programadas de notificaciones...\n");
