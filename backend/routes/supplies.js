@@ -12,12 +12,19 @@ export default function suppliesRoutes(pool) {
   // Get all supplies
   router.get("/", async (req, res) => {
     try {
+      console.log("✅ [API/SUPPLIES] GET / - Ruta está siendo ejecutada correctamente");
+      
       const [result] = await pool.query(
         "SELECT * FROM supplies ORDER BY name ASC",
       );
+      
+      console.log(`✅ [API/SUPPLIES] Retornando ${result.length} insumos como JSON`);
+      
+      res.setHeader("Content-Type", "application/json; charset=utf-8");
       res.json(result);
     } catch (error) {
       console.error("Error detallado al obtener insumos:", error);
+      res.setHeader("Content-Type", "application/json; charset=utf-8");
       res
         .status(500)
         .json({ error: "Error al obtener insumos", details: error.message });

@@ -44,11 +44,20 @@ export default function productsRoutes(pool) {
   // Obtener todos los productos
   router.get("/", async (req, res) => {
     try {
+      console.log("✅ [API/PRODUCTS] GET / - Ruta está siendo ejecutada correctamente");
+      
       // Consulta simple para diagnóstico
       const [result] = await pool.query("SELECT * FROM products");
+      
+      // Debug: Log el tipo de datos
+      console.log(`✅ [API/PRODUCTS] Retornando ${result.length} productos como JSON`);
+      
+      // Respuesta con header explícito de JSON
+      res.setHeader("Content-Type", "application/json; charset=utf-8");
       res.json(result);
     } catch (error) {
       console.error("Error detallado al obtener productos:", error);
+      res.setHeader("Content-Type", "application/json; charset=utf-8");
       res
         .status(500)
         .json({ error: "Error al obtener productos", details: error.message });

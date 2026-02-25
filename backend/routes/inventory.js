@@ -14,15 +14,22 @@ export default function inventoryRoutes(pool) {
   // Get all inventory
   router.get("/", async (req, res) => {
     try {
+      console.log("✅ [API/INVENTORY] GET / - Ruta está siendo ejecutada correctamente");
+      
       const [result] = await pool.query(`
         SELECT i.id, p.name, p.sku, i.quantity, p.price, p.category
         FROM inventory i
         JOIN products p ON i.product_id = p.id
         ORDER BY p.name
       `);
+      
+      console.log(`✅ [API/INVENTORY] Retornando ${result.length} items como JSON`);
+      
+      res.setHeader("Content-Type", "application/json; charset=utf-8");
       res.json(result);
     } catch (error) {
       console.error("Error al obtener inventario:", error);
+      res.setHeader("Content-Type", "application/json; charset=utf-8");
       res.status(500).json({ error: "Error al obtener inventario" });
     }
   });
