@@ -29,8 +29,17 @@ api.interceptors.request.use((config) => {
 
 // ✅ Interceptor para manejar errores de autenticación
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Asegurar que la respuesta tenga una estructura segura
+    if (response.data === null || response.data === undefined) {
+      console.warn("[API] Respuesta vacía:", response);
+      response.data = { data: [] };
+    }
+    return response;
+  },
   (error) => {
+    console.error("[API Error]", error.config?.url, error.response?.status, error.message);
+    
     // Si token expiró (401) o no autorizado (403)
     if (error.response?.status === 401 || error.response?.status === 403) {
       // Limpiar token y redirigir a login
@@ -94,17 +103,58 @@ export const authAPI = {
   isAuthenticated: () => !!localStorage.getItem("token"),
 };
 
-// Dashboard API
+// Dashboard API - con manejo de errores robusto
 export const dashboardAPI = {
-  getStats: () => api.get("/dashboard/stats"),
-  getCharts: () => api.get("/dashboard/charts"),
-  getAlerts: () => api.get("/dashboard/alerts"),
-  getActivity: () => api.get("/dashboard/activity"),
+  getStats: async () => {
+    try {
+      const res = await api.get("/dashboard/stats");
+      return { data: res.data || {} };
+    } catch (err) {
+      console.error("[Dashboard] Error en getStats:", err.message);
+      return { data: { monthly_sales: {}, total_products: {}, active_customers: {}, pending_orders: {} } };
+    }
+  },
+  getCharts: async () => {
+    try {
+      const res = await api.get("/dashboard/charts");
+      return { data: Array.isArray(res.data) ? res.data : [] };
+    } catch (err) {
+      console.error("[Dashboard] Error en getCharts:", err.message);
+      return { data: [] };
+    }
+  },
+  getAlerts: async () => {
+    try {
+      const res = await api.get("/dashboard/alerts");
+      return { data: Array.isArray(res.data) ? res.data : [] };
+    } catch (err) {
+      console.error("[Dashboard] Error en getAlerts:", err.message);
+      return { data: [] };
+    }
+  },
+  getActivity: async () => {
+    try {
+      const res = await api.get("/dashboard/activity");
+      return { data: Array.isArray(res.data) ? res.data : [] };
+    } catch (err) {
+      console.error("[Dashboard] Error en getActivity:", err.message);
+      return { data: [] };
+    }
+  },
 };
 
-// Products API
+// Products API - con manejo de errores robusto
 export const productsAPI = {
-  getAll: () => api.get("/products"),
+  getAll: async () => {
+    try {
+      const res = await api.get("/products");
+      console.log("[Products] getAll response:", res.data);
+      return res;
+    } catch (err) {
+      console.error("[Products] Error en getAll:", err.message);
+      throw err;
+    }
+  },
   getById: (id) => api.get(`/products/${id}`),
   create: (data) => api.post("/products", data),
   update: (id, data) => api.put(`/products/${id}`, data),
@@ -112,9 +162,18 @@ export const productsAPI = {
   toggleStatus: (id) => api.patch(`/products/${id}/toggle-status`),
 };
 
-// Supplies API
+// Supplies API - con manejo de errores robusto
 export const suppliesAPI = {
-  getAll: () => api.get("/supplies"),
+  getAll: async () => {
+    try {
+      const res = await api.get("/supplies");
+      console.log("[Supplies] getAll response:", res.data);
+      return res;
+    } catch (err) {
+      console.error("[Supplies] Error en getAll:", err.message);
+      throw err;
+    }
+  },
   getById: (id) => api.get(`/supplies/${id}`),
   create: (data) => api.post("/supplies", data),
   update: (id, data) => api.put(`/supplies/${id}`, data),
@@ -122,16 +181,34 @@ export const suppliesAPI = {
   toggleStatus: (id) => api.patch(`/supplies/${id}/toggle-status`),
 };
 
-// Inventory API
+// Inventory API - con manejo de errores robusto
 export const inventoryAPI = {
-  getAll: () => api.get("/inventory"),
+  getAll: async () => {
+    try {
+      const res = await api.get("/inventory");
+      console.log("[Inventory] getAll response:", res.data);
+      return res;
+    } catch (err) {
+      console.error("[Inventory] Error en getAll:", err.message);
+      throw err;
+    }
+  },
   getById: (id) => api.get(`/inventory/${id}`),
   update: (id, data) => api.put(`/inventory/${id}`, data),
 };
 
-// Suppliers API
+// Suppliers API - con manejo de errores robusto
 export const suppliersAPI = {
-  getAll: () => api.get("/suppliers"),
+  getAll: async () => {
+    try {
+      const res = await api.get("/suppliers");
+      console.log("[Suppliers] getAll response:", res.data);
+      return res;
+    } catch (err) {
+      console.error("[Suppliers] Error en getAll:", err.message);
+      throw err;
+    }
+  },
   getById: (id) => api.get(`/suppliers/${id}`),
   create: (data) => api.post("/suppliers", data),
   update: (id, data) => api.put(`/suppliers/${id}`, data),
