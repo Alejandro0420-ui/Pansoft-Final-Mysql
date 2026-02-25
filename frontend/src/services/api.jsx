@@ -1,6 +1,10 @@
 import axios from "axios";
+import { getApiUrl } from "../config.js";
 
-const API_BASE_URL = "/api";
+// ✅ Usar URL dinámica del backend desde config.js
+const API_BASE_URL = getApiUrl();
+
+console.log("🔧 [API Service] Inicializando con baseURL:", API_BASE_URL);
 
 // Create axios instance
 const api = axios.create({
