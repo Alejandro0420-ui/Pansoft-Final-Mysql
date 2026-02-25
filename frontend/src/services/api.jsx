@@ -1,12 +1,13 @@
 import axios from "axios";
 import { API_BASE_URL } from "../config.js";
 
-// ✅ Usar URL dinámica del backend desde config.js
-console.log("🔧 [API Service] Inicializando con baseURL:", API_BASE_URL);
+// ✅ Usar URL dinámica del backend desde config.js + /api
+const API_URL = `${API_BASE_URL}/api`;
+console.log("🔧 [API Service] Inicializando con baseURL:", API_URL);
 
 // Create axios instance
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: API_URL,
 });
 
 // ✅ Interceptor para agregar JWT automáticamente
