@@ -130,14 +130,10 @@ app.get("/api/health", (req, res) => {
   res.json({ status: "OK", message: "Backend está funcionando" });
 });
 
-// ===== FRONTEND SERVING (PRODUCTION) =====
-// Servir archivos estáticos del frontend compilado
-app.use(express.static(path.join(__dirname, "dist")));
-
-// Redirecccionar todas las rutas al index.html para manejo del routing en frontend
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "dist", "index.html"));
-});
+// ===== NOTA =====
+// En Railway, frontend y backend son servicios separados
+// No servir el frontend desde el backend
+// El frontend se sirve desde su propio contenedor en Railway
 
 // Función para inicializar la base de datos
 async function initializeDatabase() {
