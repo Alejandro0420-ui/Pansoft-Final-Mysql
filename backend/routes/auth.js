@@ -32,7 +32,6 @@ export default function authRoutes(pool) {
         [username],
       );
 
-
       if (users.length === 0) {
         return res
           .status(401)
@@ -68,7 +67,7 @@ export default function authRoutes(pool) {
           id: user.id,
           username: user.username,
           email: user.email,
-          role: user.role,
+          roleId: user.role_id,
         },
         JWT_SECRET,
         { expiresIn: "24h" }, // Token expira en 24 horas
@@ -81,7 +80,7 @@ export default function authRoutes(pool) {
           id: user.id,
           username: user.username,
           email: user.email,
-          role: user.role,
+          roleId: user.role_id,
         },
       });
     } catch (error) {
@@ -162,6 +161,91 @@ export default function authRoutes(pool) {
     } catch (error) {
       console.error("Error en registro:", error);
       res.status(500).json({ error: "Error al registrar usuario" });
+    }
+  });
+
+  // OBTENER PERMISOS DEL USUARIO AUTENTICADO
+  router.get("/user/permissions", async (req, res) => {
+    try {
+      // Verificar token JWT
+      const token = req.headers.authorization?.split(" ")[1];
+      if (!token) {
+        return res.status(401).json({ error: "Token no proporcionado" });
+      }
+
+      let decoded;
+      try {
+        decoded = jwt.verify(token, JWT_SECRET);
+      } catch (error) {
+        return res.status(401).json({ error: "Token inválido o expirado" });
+      }
+
+      const userId = decoded.id;
+      const roleId = decoded.roleId;
+
+      // Obtener usuario con rol
+      const [users] = await pool.query(
+        `SELECT u.id, u.username, u.email, u.role_id, r.name as role_name 
+         FROM users u 
+         LEFT JOIN roles r ON u.role_id = r.id 
+         WHERE u.id = ?`,
+        [userId],
+      );
+
+      // Verificar que el roleId del JWT coincida
+      if (users.length === 0 || (roleId && users[0].role_id !== roleId)) {
+        return res.status(401).json({ error: "Token inválido" });
+      }
+
+      if (users.length === 0) {
+        return res.status(404).json({ error: "Usuario no encontrado" });
+      }
+
+      const user = users[0];
+
+      // Obtener permisos del usuario a través de su rol
+      const [permissions] = await pool.query(
+        `SELECT DISTINCT p.id, p.name, p.module, p.action, p.description
+         FROM permissions p
+         JOIN role_permissions rp ON p.id = rp.permission_id
+         WHERE rp.role_id = ?
+         ORDER BY p.module, p.action`,
+        [user.role_id],
+      );
+
+      // Estructurar permisos por módulo
+      const permissionsByModule = {};
+      permissions.forEach((perm) => {
+        if (!permissionsByModule[perm.module]) {
+          permissionsByModule[perm.module] = {
+            read: false,
+            write: false,
+            delete: false,
+          };
+        }
+        if (perm.action === "read")
+          permissionsByModule[perm.module].read = true;
+        if (perm.action === "write")
+          permissionsByModule[perm.module].write = true;
+        if (perm.action === "delete")
+          permissionsByModule[perm.module].delete = true;
+      });
+
+      res.json({
+        success: true,
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          roleId: user.role_id,
+          roleName: user.role_name,
+        },
+        permissions: permissionsByModule,
+        allPermissions: permissions, // Para UI avanzada (permiso específico)
+      });
+    } catch (error) {
+      console.error("Error al obtener permisos:", error);
+      res.status(500).json({ error: "Error al obtener permisos" });
     }
   });
 

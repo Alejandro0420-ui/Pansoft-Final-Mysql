@@ -43,6 +43,7 @@ export function Products() {
     stock_quantity: "",
     min_stock_level: "",
     unit: "kg",
+    expiry_date: "",
   });
 
   useEffect(() => {
@@ -76,6 +77,7 @@ export function Products() {
       stock_quantity: "",
       min_stock_level: "",
       unit: "kg",
+      expiry_date: "",
     });
     setImageFile(null);
     setEditingProduct(null);
@@ -97,12 +99,13 @@ export function Products() {
       stock_quantity: item.stock_quantity || "",
       min_stock_level: item.min_stock_level || "",
       unit: item.unit || "kg",
+      expiry_date: item.expiry_date || "",
     });
     setShowModal(true);
   };
 
   const handleSave = async () => {
-    console.log("🔍 handleSave ejecutado", { formData, activeTab });
+    console.log("handleSave ejecutado", { formData, activeTab });
 
     if (
       !formData.name ||

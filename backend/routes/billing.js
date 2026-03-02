@@ -1,5 +1,9 @@
 import express from "express";
 import {
+  verifyToken,
+  checkRole,
+} from "../middleware/permissions.middleware.js";
+import {
   createNotification,
   notificationService,
   checkOverdueInvoices,
@@ -40,14 +44,15 @@ async function generateUniqueInvoiceNumber(pool) {
 
 export default function billingRoutes(pool) {
   const router = express.Router();
+  const checkRoleWithPool = checkRole(pool);
 
-  // Obtener todas las facturas 
-  router.get("/", async (req, res) => {
+  // Obtener todas las facturas - Requiere autenticación
+  router.get("/", verifyToken, async (req, res) => {
     try {
       const [result] = await pool.query(`
-        SELECT i.*, c.name as customer_name FROM invoices i
-        LEFT JOIN customers c ON i.customer_id = c.id
-        ORDER BY i.issue_date DESC
+          SELECT i.*, c.name as customer_name FROM invoices i
+          LEFT JOIN customers c ON i.customer_id = c.id
+          ORDER BY i.issue_date DESC
       `);
       res.json(result);
     } catch (error) {

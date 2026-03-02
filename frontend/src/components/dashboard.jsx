@@ -54,33 +54,12 @@ export function Dashboard() {
         dashboardAPI.getActivity(),
       ]);
 
-      console.log("[Dashboard] Loaded stats:", statsRes);
-      console.log("[Dashboard] Loaded charts:", chartsRes);
-      console.log("[Dashboard] Loaded alerts:", alertsRes);
-      console.log("[Dashboard] Loaded activity:", activityRes);
-
-      // Validar y establecer stats
-      if (statsRes && statsRes.data && typeof statsRes.data === 'object') {
-        setStats(statsRes.data);
-      }
-      
-      // Validar y establecer charts
-      if (Array.isArray(chartsRes?.data) && chartsRes.data.length > 0) {
-        setChartData(chartsRes.data);
-      }
-      
-      // Validar y establecer alerts
-      if (Array.isArray(alertsRes?.data) && alertsRes.data.length > 0) {
-        setAlerts(alertsRes.data);
-      }
-      
-      // Validar y establecer activity
-      if (Array.isArray(activityRes?.data) && activityRes.data.length > 0) {
-        setActivity(activityRes.data);
-      }
+      setStats(statsRes.data);
+      if (chartsRes.data.length > 0) setChartData(chartsRes.data);
+      if (alertsRes.data.length > 0) setAlerts(alertsRes.data);
+      if (activityRes.data.length > 0) setActivity(activityRes.data);
     } catch (error) {
-      console.error('❌ Error cargando dashboard:', error);
-      // Mantener valores por defecto si hay error
+      console.error('Error cargando dashboard:', error);
     }
   };
 

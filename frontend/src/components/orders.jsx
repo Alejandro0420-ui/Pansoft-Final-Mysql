@@ -1,9 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { salesOrdersAPI, productionOrdersAPI } from "../services/api";
+import {
+  salesOrdersAPI,
+  productionOrdersAPI,
+  productsAPI,
+} from "../services/api";
 import "bootstrap/dist/css/bootstrap.min.css";
 
-// Importar componentes refactorizados
+//  componentes refactorizados
 import { useOrdersLogic } from "./orders/useOrdersLogic";
 import { OrdersHeader } from "./orders/OrdersHeader";
 import { SearchBar } from "./orders/SearchBar";
@@ -12,7 +16,7 @@ import { ProductionOrdersTable } from "./orders/ProductionOrdersTable";
 import { OrderFormModal } from "./orders/OrderFormModal";
 import { SuppliesModal } from "./orders/SuppliesModalNew";
 import { OrderDetailsModal } from "./orders/OrderDetailsModal";
-import { PRODUCT_PRICES, EMPLOYEES, THEME_COLORS } from "./orders/constants";
+import { EMPLOYEES, THEME_COLORS } from "./orders/constants";
 
 export function Orders() {
   // Usar el hook personalizado para la lógica de órdenes
@@ -28,6 +32,8 @@ export function Orders() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("sales");
   const [showModal, setShowModal] = useState(false);
+  const [products, setProducts] = useState([]);
+  const [productsLoading, setProductsLoading] = useState(true);
   const [showSuppliesModal, setShowSuppliesModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -39,10 +45,11 @@ export function Orders() {
   });
   const [salesItems, setSalesItems] = useState([]);
   const [newSalesItem, setNewSalesItem] = useState({
+    category: "",
     product: "",
     quantity: 1,
   });
-  
+
   const [productionForm, setProductionForm] = useState({
     product: "",
     quantity: "",
@@ -50,13 +57,67 @@ export function Orders() {
   });
   const [supplies, setSupplies] = useState([]);
 
+  // Cargar productos dinámicamente
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        setProductsLoading(true);
+        const response = await productsAPI.getAll();
+        const productsList = (response.data || []).filter(
+          (p) =>
+            ![
+              "Harinas",
+              "Endulzantes",
+              "Levaduras",
+              "Lácteos",
+              "Saborizantes",
+              "Condimentos",
+            ].includes(p.category),
+        );
+        setProducts(productsList);
+      } catch (error) {
+        console.error("Error cargando productos:", error);
+        toast.error("Error al cargar productos");
+      } finally {
+        setProductsLoading(false);
+      }
+    };
+    loadProducts();
+  }, []);
+
+  // Obtener categorías únicas
+  const getCategories = () => {
+    const uniqueCategories = [
+      ...new Set(products.map((p) => p.category).filter(Boolean)),
+    ];
+    return uniqueCategories.sort();
+  };
+
+  // Filtrar productos por categoría
+  const getProductsByCategory = (category) => {
+    return products.filter((p) => p.category === category);
+  };
+
   // Agregar item a la orden de venta
   const addSalesItem = () => {
-    if (!newSalesItem.product || newSalesItem.quantity < 1) {
-      toast.error("Selecciona producto y cantidad válida");
+    if (
+      !newSalesItem.category ||
+      !newSalesItem.product ||
+      newSalesItem.quantity < 1
+    ) {
+      toast.error("Selecciona categoría, producto y cantidad válida");
       return;
     }
-    const unitPrice = PRODUCT_PRICES[newSalesItem.product] || 0;
+
+    const selectedProduct = products.find(
+      (p) => p.name === newSalesItem.product,
+    );
+    if (!selectedProduct) {
+      toast.error("Producto no encontrado");
+      return;
+    }
+
+    const unitPrice = selectedProduct.price || 0;
     setSalesItems([
       ...salesItems,
       {
@@ -66,7 +127,7 @@ export function Orders() {
         total: unitPrice * parseInt(newSalesItem.quantity),
       },
     ]);
-    setNewSalesItem({ product: "", quantity: 1 });
+    setNewSalesItem({ category: "", product: "", quantity: 1 });
     toast.success("Producto agregado");
   };
 
@@ -89,12 +150,15 @@ export function Orders() {
 
     try {
       const totalAmount = calculateSalesTotal();
-      const itemsData = salesItems.map(item => ({
-        product_id: Object.keys(PRODUCT_PRICES).indexOf(item.product) + 1,
-        quantity: item.quantity,
-        unit_price: item.unitPrice,
-        total: item.total,
-      }));
+      const itemsData = salesItems.map((item) => {
+        const prod = products.find((p) => p.name === item.product);
+        return {
+          product_id: prod?.id || 1,
+          quantity: item.quantity,
+          unit_price: item.unitPrice,
+          total: item.total,
+        };
+      });
 
       if (isEditing) {
         await salesOrdersAPI.update(selectedOrder.id, {
@@ -200,7 +264,7 @@ export function Orders() {
   const resetForm = () => {
     setSalesForm({ client: "" });
     setSalesItems([]);
-    setNewSalesItem({ product: "", quantity: 1 });
+    setNewSalesItem({ category: "", product: "", quantity: 1 });
     setProductionForm({ product: "", quantity: "", responsible: "" });
     setSupplies([]);
     setIsEditing(false);
@@ -317,11 +381,18 @@ export function Orders() {
         loading={loading}
         ordersForm={activeTab === "sales" ? salesForm : productionForm}
         salesItems={activeTab === "sales" ? salesItems : []}
-        newSalesItem={activeTab === "sales" ? newSalesItem : { product: "", quantity: 1 }}
+        newSalesItem={
+          activeTab === "sales"
+            ? newSalesItem
+            : { category: "", product: "", quantity: 1 }
+        }
         onFormChange={activeTab === "sales" ? setSalesForm : setProductionForm}
         onAddSalesItem={addSalesItem}
         onRemoveSalesItem={removeSalesItem}
         onNewSalesItemChange={setNewSalesItem}
+        products={products}
+        categories={getCategories()}
+        getProductsByCategory={getProductsByCategory}
       />
 
       {/* Modal de Insumos */}

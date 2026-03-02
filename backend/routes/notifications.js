@@ -76,17 +76,15 @@ export default function notificationsRoutes(pool) {
       }
       const [countResult] = await pool.query(countQuery);
 
-      console.log(`[API] GET /notifications - returned ${Array.isArray(notifications) ? notifications.length : 0} items`);
-      
       res.json({
-        notifications: Array.isArray(notifications) ? notifications : [],
-        total: countResult && countResult[0] ? countResult[0].total : 0,
+        notifications,
+        total: countResult[0].total,
         limit: parseInt(limit),
         offset: parseInt(offset),
       });
     } catch (error) {
       console.error("Error al obtener notificaciones:", error);
-      res.status(500).json({ error: "Error al obtener notificaciones", details: error.message });
+      res.status(500).json({ error: "Error al obtener notificaciones" });
     }
   });
 
@@ -111,15 +109,10 @@ export default function notificationsRoutes(pool) {
       const [result] = await pool.query(
         "SELECT COUNT(*) as unreadCount FROM notifications WHERE is_read = FALSE",
       );
-      
-      const unreadCount = result && result[0] ? result[0].unreadCount : 0;
-      
-      console.log(`[API] GET /unread/count - returned ${unreadCount}`);
-      
-      res.json({ unreadCount });
+      res.json(result[0]);
     } catch (error) {
       console.error("Error al contar notificaciones sin leer:", error);
-      res.status(500).json({ unreadCount: 0, error: "Error al contar notificaciones" });
+      res.status(500).json({ error: "Error al contar notificaciones" });
     }
   });
 

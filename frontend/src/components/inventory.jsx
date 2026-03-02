@@ -22,6 +22,7 @@ export function Inventory() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [movementForm, setMovementForm] = useState({
+    category: "",
     product: "",
     type: "",
     quantity: "",
@@ -255,7 +256,12 @@ export function Inventory() {
   };
 
   const handleAddMovement = async () => {
-    if (!movementForm.product || !movementForm.type || !movementForm.quantity) {
+    if (
+      !movementForm.category ||
+      !movementForm.product ||
+      !movementForm.type ||
+      !movementForm.quantity
+    ) {
       toast.error("Completa todos los campos");
       return;
     }
@@ -291,14 +297,13 @@ export function Inventory() {
       // Registrar movimiento en la API
       const endpoint = isSupply ? "/api/supplies/" : "/api/inventory/";
 
-      console.log(
-        `Actualizando ${endpoint}${item.id} con cantidad ${newStock}`,
-      );
+      const token = localStorage.getItem("token");
 
       const updateResponse = await fetch(`${endpoint}${item.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           quantity: newStock,
@@ -315,7 +320,6 @@ export function Inventory() {
       }
 
       const responseData = await updateResponse.json();
-      console.log("Respuesta del servidor:", responseData);
 
       // Update local state
       const updateData = (arr) =>
@@ -546,6 +550,7 @@ export function Inventory() {
           onClose={() => {
             setShowMovementModal(false);
             setMovementForm({
+              category: "",
               product: "",
               type: "",
               quantity: "",
@@ -554,9 +559,11 @@ export function Inventory() {
           }}
           items={data}
           formData={movementForm}
-          onFormChange={(field, value) =>
-            setMovementForm({ ...movementForm, [field]: value })
-          }
+          onFormChange={(field, value) => {
+            setMovementForm((prev) => {
+              return { ...prev, [field]: value };
+            });
+          }}
           onSubmit={handleAddMovement}
         />
       )}

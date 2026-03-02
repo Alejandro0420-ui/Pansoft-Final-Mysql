@@ -1,71 +1,72 @@
 import express from "express";
+import {
+  verifyToken,
+  checkRole,
+} from "../middleware/permissions.middleware.js";
 import upload from "../multerConfig.js";
 
 export default function productsRoutes(pool) {
   const router = express.Router();
+  const checkRoleWithPool = checkRole(pool);
 
-  // ⚠️ RUTAS ESPECÍFICAS PRIMERO (/:id/toggle-status debe IR ANTES que /:id)
+  //  RUTAS ESPECÍFICAS PRIMERO (/:id/toggle-status debe IR ANTES que /:id)
 
-  // Toggle product status
-  router.patch("/:id/toggle-status", async (req, res) => {
-    try {
-      const { id } = req.params;
+  // Toggle product status - Requiere permisos de admin
+  router.patch(
+    "/:id/toggle-status",
+    verifyToken,
+    checkRoleWithPool(["Administrador General"]),
+    async (req, res) => {
+      try {
+        const { id } = req.params;
 
-      // Obtener estado actual
-      const [current] = await pool.query(
-        "SELECT is_active FROM products WHERE id = ?",
-        [id],
-      );
+        // Obtener estado actual
+        const [current] = await pool.query(
+          "SELECT is_active FROM products WHERE id = ?",
+          [id],
+        );
 
-      if (!current.length) {
-        return res.status(404).json({ error: "Producto no encontrado" });
+        if (!current.length) {
+          return res.status(404).json({ error: "Producto no encontrado" });
+        }
+
+        const newStatus = !current[0].is_active;
+
+        // Cambiar estado
+        await pool.query(
+          "UPDATE products SET is_active = ?, updated_at = NOW() WHERE id = ?",
+          [newStatus, id],
+        );
+
+        res.json({ success: true, is_active: newStatus });
+      } catch (error) {
+        console.error("Error al cambiar estado del producto:", error);
+        res.status(500).json({
+          error: "Error al cambiar estado del producto",
+          details: error.message,
+        });
       }
-
-      const newStatus = !current[0].is_active;
-
-      // Cambiar estado
-      await pool.query(
-        "UPDATE products SET is_active = ?, updated_at = NOW() WHERE id = ?",
-        [newStatus, id],
-      );
-
-      res.json({ success: true, is_active: newStatus });
-    } catch (error) {
-      console.error("Error al cambiar estado del producto:", error);
-      res.status(500).json({
-        error: "Error al cambiar estado del producto",
-        details: error.message,
-      });
-    }
-  });
+    },
+  );
 
   // ⚠️ RUTAS GENÉRICAS DESPUÉS (/:id las captura)
 
-  // Obtener todos los productos
-  router.get("/", async (req, res) => {
+  // Obtener todos los productos - Requiere autenticación
+  router.get("/", verifyToken, async (req, res) => {
     try {
-      console.log("✅ [API/PRODUCTS] GET / - Ruta está siendo ejecutada correctamente");
-      
       // Consulta simple para diagnóstico
       const [result] = await pool.query("SELECT * FROM products");
-      
-      // Debug: Log el tipo de datos
-      console.log(`✅ [API/PRODUCTS] Retornando ${result.length} productos como JSON`);
-      
-      // Respuesta con header explícito de JSON
-      res.setHeader("Content-Type", "application/json; charset=utf-8");
       res.json(result);
     } catch (error) {
       console.error("Error detallado al obtener productos:", error);
-      res.setHeader("Content-Type", "application/json; charset=utf-8");
       res
         .status(500)
         .json({ error: "Error al obtener productos", details: error.message });
     }
   });
 
-  // Get product by ID
-  router.get("/:id", async (req, res) => {
+  // Get product by ID - Requiere autenticación
+  router.get("/:id", verifyToken, async (req, res) => {
     try {
       const { id } = req.params;
       const [result] = await pool.query("SELECT * FROM products WHERE id = ?", [
@@ -78,53 +79,15 @@ export default function productsRoutes(pool) {
     }
   });
 
-  // Create product with image
-  router.post("/", upload.single("image"), async (req, res) => {
-    try {
-      const {
-        name,
-        sku,
-        description,
-        category,
-        price,
-        stock_quantity,
-        min_stock_level,
-      } = req.body;
-
-      // Validar campos requeridos
-      if (!name || !sku || !category || !price) {
-        return res.status(400).json({
-          error: "Nombre, SKU, categoría y precio son campos obligatorios",
-        });
-      }
-
-      // Verificar si el SKU ya existe
-      const [existingSku] = await pool.query(
-        "SELECT id FROM products WHERE LOWER(sku) = LOWER(?)",
-        [sku],
-      );
-      if (existingSku.length > 0) {
-        return res.status(409).json({
-          error: `El SKU "${sku}" ya existe en el sistema. Por favor usa un SKU diferente.`,
-        });
-      }
-
-      // Verificar si el nombre ya existe
-      const [existingName] = await pool.query(
-        "SELECT id FROM products WHERE LOWER(name) = LOWER(?)",
-        [name],
-      );
-      if (existingName.length > 0) {
-        return res.status(409).json({
-          error: `El nombre "${name}" ya existe en el sistema. Por favor usa un nombre diferente.`,
-        });
-      }
-
-      const imageUrl = req.file ? `/images/${req.file.filename}` : null;
-
-      const [result] = await pool.query(
-        "INSERT INTO products (name, sku, description, category, price, stock_quantity, min_stock_level, image_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-        [
+  // Create product with image - Requiere permisos de admin
+  router.post(
+    "/",
+    verifyToken,
+    checkRoleWithPool(["Administrador General"]),
+    upload.single("image"),
+    async (req, res) => {
+      try {
+        const {
           name,
           sku,
           description,
@@ -132,68 +95,60 @@ export default function productsRoutes(pool) {
           price,
           stock_quantity,
           min_stock_level,
-          imageUrl,
-        ],
-      );
+          expiry_date,
+        } = req.body;
 
-      console.log("✅ Producto creado exitosamente:", result.insertId);
-      res.status(201).json({
-        success: true,
-        message: `${name} creado exitosamente`,
-        id: result.insertId,
-        name,
-        sku,
-        description,
-        category,
-        price,
-        stock_quantity,
-        min_stock_level,
-        image_url: imageUrl,
-      });
-    } catch (error) {
-      console.error("Error al crear producto:", error);
-      if (error.code === "ER_DUP_ENTRY") {
-        res.status(409).json({
-          error: `El SKU "${error.sqlMessage.match(/'([^']*)'/)?.[1] || "proporcionado"}" ya existe. Por favor usa un SKU único.`,
-        });
-      } else {
-        res
-          .status(500)
-          .json({ error: "Error al crear producto: " + error.message });
-      }
-    }
-  });
+        // Validar campos requeridos
+        if (!name || !sku || !category || !price) {
+          return res.status(400).json({
+            error: "Nombre, SKU, categoría y precio son campos obligatorios",
+          });
+        }
 
-  // Update product
-  router.put("/:id", upload.single("image"), async (req, res) => {
-    try {
-      const { id } = req.params;
-      const {
-        name,
-        sku,
-        description,
-        category,
-        price,
-        stock_quantity,
-        min_stock_level,
-      } = req.body;
+        // Verificar si el SKU ya existe
+        const [existingSku] = await pool.query(
+          "SELECT id FROM products WHERE LOWER(sku) = LOWER(?)",
+          [sku],
+        );
+        if (existingSku.length > 0) {
+          return res.status(409).json({
+            error: `El SKU "${sku}" ya existe en el sistema. Por favor usa un SKU diferente.`,
+          });
+        }
 
-      let query =
-        "UPDATE products SET name=?, sku=?, category=?, price=?, stock_quantity=?, min_stock_level=?, updated_at=NOW()";
-      let params = [
-        name,
-        sku,
-        category,
-        price,
-        stock_quantity,
-        min_stock_level,
-      ];
+        // Verificar si el nombre ya existe
+        const [existingName] = await pool.query(
+          "SELECT id FROM products WHERE LOWER(name) = LOWER(?)",
+          [name],
+        );
+        if (existingName.length > 0) {
+          return res.status(409).json({
+            error: `El nombre "${name}" ya existe en el sistema. Por favor usa un nombre diferente.`,
+          });
+        }
 
-      // Agregar description solo si se proporciona
-      if (description !== undefined && description !== null) {
-        query =
-          "UPDATE products SET name=?, sku=?, description=?, category=?, price=?, stock_quantity=?, min_stock_level=?, updated_at=NOW()";
-        params = [
+        const imageUrl = req.file ? `/images/${req.file.filename}` : null;
+
+        const [result] = await pool.query(
+          "INSERT INTO products (name, sku, description, category, price, stock_quantity, min_stock_level, image_url, expiry_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+          [
+            name,
+            sku,
+            description,
+            category,
+            price,
+            stock_quantity,
+            min_stock_level,
+            imageUrl,
+            expiry_date || null,
+          ],
+        );
+
+        console.log(" Producto creado exitosamente:", result.insertId);
+        res.status(201).json({
+          success: true,
+          message: `${name} creado exitosamente`,
+          id: result.insertId,
           name,
           sku,
           description,
@@ -201,49 +156,118 @@ export default function productsRoutes(pool) {
           price,
           stock_quantity,
           min_stock_level,
+          image_url: imageUrl,
+        });
+      } catch (error) {
+        console.error("Error al crear producto:", error);
+        if (error.code === "ER_DUP_ENTRY") {
+          res.status(409).json({
+            error: `El SKU "${error.sqlMessage.match(/'([^']*)'/)?.[1] || "proporcionado"}" ya existe. Por favor usa un SKU único.`,
+          });
+        } else {
+          res
+            .status(500)
+            .json({ error: "Error al crear producto: " + error.message });
+        }
+      }
+    },
+  );
+
+  // Update product - Requiere permisos de admin
+  router.put(
+    "/:id",
+    verifyToken,
+    checkRoleWithPool(["Administrador General"]),
+    upload.single("image"),
+    async (req, res) => {
+      try {
+        const { id } = req.params;
+        const {
+          name,
+          sku,
+          description,
+          category,
+          price,
+          stock_quantity,
+          min_stock_level,
+          expiry_date,
+        } = req.body;
+
+        let query =
+          "UPDATE products SET name=?, sku=?, category=?, price=?, stock_quantity=?, min_stock_level=?, expiry_date=?, updated_at=NOW()";
+        let params = [
+          name,
+          sku,
+          category,
+          price,
+          stock_quantity,
+          min_stock_level,
+          expiry_date || null,
         ];
+
+        // Agregar description solo si se proporciona
+        if (description !== undefined && description !== null) {
+          query =
+            "UPDATE products SET name=?, sku=?, description=?, category=?, price=?, stock_quantity=?, min_stock_level=?, expiry_date=?, updated_at=NOW()";
+          params = [
+            name,
+            sku,
+            description,
+            category,
+            price,
+            stock_quantity,
+            min_stock_level,
+            expiry_date || null,
+          ];
+        }
+
+        if (req.file) {
+          query += ", image_url=?";
+          params.push(`/images/${req.file.filename}`);
+        }
+
+        query += " WHERE id=?";
+        params.push(id);
+
+        await pool.query(query, params);
+
+        res.json({
+          id,
+          name,
+          sku,
+          description,
+          category,
+          price,
+          stock_quantity,
+          min_stock_level,
+          expiry_date,
+        });
+      } catch (error) {
+        console.error("Error al actualizar producto:", error);
+        res.status(500).json({ error: "Error al actualizar producto" });
       }
+    },
+  );
 
-      if (req.file) {
-        query += ", image_url=?";
-        params.push(`/images/${req.file.filename}`);
+  //  Deshabilitar producto vía DELETE - Requiere permisos de admin
+  router.delete(
+    "/:id",
+    verifyToken,
+    checkRoleWithPool(["Administrador General"]),
+    async (req, res) => {
+      try {
+        const { id } = req.params;
+        await pool.query(
+          "UPDATE products SET is_active = false, updated_at = NOW() WHERE id = ?",
+          [id],
+        );
+        res.json({ success: true });
+      } catch (error) {
+        console.error("Error al deshabilitar producto:", error);
+        res.status(500).json({ error: "Error al deshabilitar producto" });
       }
-
-      query += " WHERE id=?";
-      params.push(id);
-
-      await pool.query(query, params);
-
-      res.json({
-        id,
-        name,
-        sku,
-        description,
-        category,
-        price,
-        stock_quantity,
-        min_stock_level,
-      });
-    } catch (error) {
-      console.error("Error al actualizar producto:", error);
-      res.status(500).json({ error: "Error al actualizar producto" });
-    }
-  });
-
-  //  Deshabilitar producto vía DELETE
-  router.delete("/:id", async (req, res) => {
-    try {
-      const { id } = req.params;
-      await pool.query(
-        "UPDATE products SET is_active = false, updated_at = NOW() WHERE id = ?",
-        [id],
-      );
-      res.json({ success: true });
-    } catch (error) {
-      console.error("Error al deshabilitar producto:", error);
-      res.status(500).json({ error: "Error al deshabilitar producto" });
-    }
-  });
+    },
+  );
 
   return router;
 }

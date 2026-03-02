@@ -412,18 +412,268 @@ div.modal-dialog {
   height: 100% !important;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    height: 100%;
-    z-index: 1000;
+/* ============================================
+   RESPONSIVE DESIGN - BREAKPOINTS
+   ============================================ */
+
+/* Mobile First - Extra Small Devices (< 576px) */
+@media (max-width: 575.98px) {
+  html,
+  body {
+    font-size: 14px;
   }
 
-  .main-content {
+  #pansoft-logo {
+    max-width: 120px;
+  }
+
+  h1 {
+    font-size: 1.5rem !important;
+  }
+
+  h2 {
+    font-size: 1.25rem !important;
+  }
+
+  h3 {
+    font-size: 1.1rem !important;
+  }
+
+  .container,
+  .container-sm,
+  .container-md,
+  .container-lg {
+    padding: 0.5rem !important;
+  }
+
+  .p-4 {
+    padding: 0.75rem !important;
+  }
+
+  .p-3 {
+    padding: 0.5rem !important;
+  }
+
+  .px-4 {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+
+  /* Sidebar for mobile */
+  aside {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    height: 100vh !important;
+    z-index: 999 !important;
+    overflow-y: auto !important;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.2) !important;
+  }
+
+  aside.sidebar-open {
+    width: 280px !important;
+  }
+
+  aside.sidebar-closed {
+    width: 0 !important;
+    display: none;
+  }
+
+  main {
+    margin-left: 0 !important;
+    width: 100% !important;
+    padding-top: 70px !important;
+  }
+
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  /* Table responsive */
+  .table-responsive {
+    font-size: 0.75rem;
+  }
+
+  .table thead th {
+    padding: 0.5rem 0.25rem;
+    font-size: 0.7rem;
+  }
+
+  .table tbody td {
+    padding: 0.5rem 0.25rem;
+    font-size: 0.75rem;
+  }
+
+  .btn {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.75rem;
+  }
+
+  .btn-sm {
+    padding: 0.3rem 0.4rem;
+    font-size: 0.65rem;
+  }
+
+  .btn-group-sm .btn {
+    padding: 0.2rem 0.3rem;
+    font-size: 0.65rem;
+  }
+
+  .card {
+    margin-bottom: 0.5rem;
+  }
+
+  .badge {
+    padding: 0.2rem 0.4rem;
+    font-size: 0.65rem;
+  }
+
+  .modal-dialog {
+    max-width: calc(100vw - 1rem) !important;
+    width: 100% !important;
+    margin: 0.5rem auto !important;
+    max-height: 90vh !important;
+  }
+
+  .modal-body {
+    max-height: calc(90vh - 180px) !important;
+    padding: 1rem !important;
+  }
+
+  .modal-header {
+    padding: 1rem !important;
+  }
+
+  .modal-footer {
+    padding: 0.75rem !important;
+    gap: 0.25rem !important;
+  }
+
+  .form-control,
+  .form-select,
+  textarea {
+    font-size: 16px; /* Prevent zoom on iOS */
+    padding: 0.5rem 0.75rem;
+  }
+
+  input,
+  select,
+  textarea {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  /* Grid responsive */
+  .row {
+    margin-left: -0.25rem !important;
+    margin-right: -0.25rem !important;
+  }
+
+  .col,
+  [class*="col-"] {
+    padding-left: 0.25rem !important;
+    padding-right: 0.25rem !important;
+  }
+
+  .col-12 {
+    width: 100% !important;
+  }
+
+  /* Flex columns on mobile */
+  .d-md-flex {
+    display: flex;
+    flex-direction: column;
+  }
+
+  gap-2 {
+    gap: 0.5rem !important;
+  }
+
+  gap-3 {
+    gap: 0.75rem !important;
+  }
+
+  nav.flex-column {
+    gap: 0.25rem !important;
+  }
+}
+
+/* Small Devices (Tablets - 576px and up) */
+@media (min-width: 576px) and (max-width: 767.98px) {
+  #pansoft-logo {
+    max-width: 150px;
+  }
+
+  main {
+    margin-left: 0 !important;
+  }
+
+  aside.sidebar-open {
+    width: 250px !important;
+  }
+
+  .table-responsive {
+    font-size: 0.85rem;
+  }
+
+  .modal-dialog {
+    max-width: 500px !important;
+  }
+
+  .btn {
+    padding: 0.45rem 0.75rem;
+    font-size: 0.85rem;
+  }
+}
+
+/* Medium Devices (Tablets - 768px and up) */
+@media (min-width: 768px) {
+  #pansoft-logo {
+    max-width: 180px;
+  }
+
+  main {
     margin-left: 0;
+  }
+
+  aside {
+    position: relative !important;
+    height: auto !important;
+  }
+
+  aside.sidebar-closed {
+    display: flex !important;
+    width: 0 !important;
+  }
+
+  /* Table responsive on medium screens */
+  .table-responsive {
+    font-size: 0.9rem;
+  }
+
+  .modal-dialog {
+    max-width: 600px !important;
+  }
+}
+
+/* Large Devices (Desktops - 992px and up) */
+@media (min-width: 992px) {
+  main {
+    margin-left: 0;
+  }
+
+  .modal-dialog {
+    max-width: 800px !important;
+  }
+
+  .modal-dialog.modal-lg {
+    max-width: 900px !important;
+  }
+
+  .table-responsive {
+    font-size: 1rem;
   }
 }
 

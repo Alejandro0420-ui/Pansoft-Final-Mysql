@@ -2,10 +2,9 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { Trash2, Plus, Minus, Printer, X } from "lucide-react";
 import { toast } from "sonner";
-import { getApiUrl } from "../../config";
 import "bootstrap/dist/css/bootstrap.min.css";
 
-const API_URL = getApiUrl("");
+const API_URL = "http://localhost:5000/api";
 
 export function SalesPoint() {
   const [products, setProducts] = useState([]);
@@ -26,7 +25,10 @@ export function SalesPoint() {
   const loadProducts = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_URL}/products`);
+      const token = localStorage.getItem("token");
+      const response = await axios.get(`${API_URL}/products`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
       const activeProducts = (response.data || []).filter(
         (p) => p.is_active !== 0,
       );
@@ -121,11 +123,18 @@ export function SalesPoint() {
 
       // Procesar la venta en el backend (crear factura + actualizar inventario)
       console.log("📤 Enviando POST a /inventory/process-sale...");
-      const response = await axios.post(`${API_URL}/inventory/process-sale`, {
-        cart: cart,
-        invoiceNumber: invoiceNumber,
-        invoiceDate: invoiceDate,
-      });
+      const token = localStorage.getItem("token");
+      const response = await axios.post(
+        `${API_URL}/inventory/process-sale`,
+        {
+          cart: cart,
+          invoiceNumber: invoiceNumber,
+          invoiceDate: invoiceDate,
+        },
+        {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        },
+      );
 
       console.log("✅ Respuesta del servidor:", response.data);
 
@@ -252,7 +261,7 @@ export function SalesPoint() {
                     >
                       {product.image_url && (
                         <img
-                          src={getApiUrl(`${product.image_url}`)}
+                          src={`http://localhost:5000${product.image_url}`}
                           alt={product.name}
                           style={{
                             height: "120px",

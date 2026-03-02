@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 
 export function MovementModal({
   isOpen,
@@ -10,11 +10,29 @@ export function MovementModal({
 }) {
   if (!isOpen) return null;
 
+  // Obtener categorías únicas de los items
+  const categories = useMemo(() => {
+    if (!items || items.length === 0) return [];
+    const uniqueCategories = [...new Set(items.map((i) => i.category))].filter(
+      (cat) => cat && cat.trim() !== "",
+    );
+    return uniqueCategories.sort();
+  }, [items]);
+
+  // Filtrar items por categoría seleccionada
+  const filteredItems = useMemo(() => {
+    if (!formData.category || !items) return [];
+    return items.filter((i) => i.category === formData.category);
+  }, [items, formData.category]);
+
   // Encontrar el item actual seleccionado
-  const selectedItem = useMemo(
-    () => items.find((i) => i.name === formData.product),
-    [formData.product, items],
-  );
+  const selectedItem = useMemo(() => {
+    if (!formData.product) return null;
+    const item =
+      filteredItems.find((i) => i.name === formData.product) ||
+      items.find((i) => i.name === formData.product);
+    return item;
+  }, [formData.product, filteredItems, items]);
 
   // Calcular si hay error de exceso de stock para salida
   const quantity = parseInt(formData.quantity) || 0;
@@ -39,19 +57,53 @@ export function MovementModal({
           </div>
           <div className="modal-body">
             <div className="mb-3">
-              <label className="form-label">Producto/Insumo *</label>
+              <label className="form-label">Categoría *</label>
               <select
                 className="form-select"
                 style={{ borderColor: "#EBB583", borderWidth: "2px" }}
-                value={formData.product}
-                onChange={(e) => onFormChange("product", e.target.value)}
+                value={formData.category || ""}
+                onChange={(e) => {
+                  const newCategory = e.target.value;
+                  onFormChange("category", newCategory);
+                  onFormChange("product", "");
+                }}
               >
-                <option value="">Seleccione producto</option>
-                {items.map((item) => (
-                  <option key={item.id} value={item.name}>
-                    {item.name}
-                  </option>
-                ))}
+                <option value="">Seleccione categoría</option>
+                {categories &&
+                  categories.length > 0 &&
+                  categories.map((category) => (
+                    <option key={category} value={category}>
+                      {category}
+                    </option>
+                  ))}
+              </select>
+            </div>
+            <div className="mb-3">
+              <label className="form-label">Producto/Insumo *</label>
+              <select
+                className="form-select"
+                style={{
+                  borderColor: "#EBB583",
+                  borderWidth: "2px",
+                  opacity: !formData.category ? 0.5 : 1,
+                  pointerEvents: !formData.category ? "none" : "auto",
+                }}
+                value={formData.product || ""}
+                onChange={(e) => onFormChange("product", e.target.value)}
+                disabled={!formData.category}
+              >
+                <option value="">
+                  {!formData.category
+                    ? "Seleccione categoría primero"
+                    : "Seleccione producto"}
+                </option>
+                {filteredItems &&
+                  filteredItems.length > 0 &&
+                  filteredItems.map((item) => (
+                    <option key={item.id} value={item.name}>
+                      {item.name}
+                    </option>
+                  ))}
               </select>
             </div>
             <div className="row">

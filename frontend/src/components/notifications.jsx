@@ -8,7 +8,6 @@ import {
   AlertTriangle,
   ShoppingCart,
 } from "lucide-react";
-import { getApiUrl } from "../config";
 
 export function Notifications() {
   const [notifications, setNotifications] = useState([]);
@@ -40,40 +39,19 @@ export function Notifications() {
       setLoading(true);
       const queryParam = filter === "unread" ? "?unreadOnly=true" : "";
       const response = await fetch(
-        getApiUrl(`/notifications${queryParam}`),
+        `http://localhost:5000/api/notifications${queryParam}`,
       );
-      
-      if (!response.ok) {
-        console.error("API error:", response.status, response.statusText);
-        setNotifications([]);
-        return;
-      }
-      
       const data = await response.json();
-      
-      // Validar que data.notifications es un array
-      if (Array.isArray(data.notifications)) {
-        setNotifications(data.notifications);
-      } else if (Array.isArray(data)) {
-        setNotifications(data);
-      } else {
-        console.warn("Invalid notifications data:", data);
-        setNotifications([]);
-      }
+      setNotifications(data.notifications || []);
 
       // Cargar conteo de no leídas
       const countResponse = await fetch(
-        getApiUrl("/notifications/unread/count"),
+        "http://localhost:5000/api/notifications/unread/count",
       );
-      
-      if (countResponse.ok) {
-        const countData = await countResponse.json();
-        setUnreadCount(countData.unreadCount || 0);
-      }
+      const countData = await countResponse.json();
+      setUnreadCount(countData.unreadCount || 0);
     } catch (error) {
       console.error("Error cargando notificaciones:", error);
-      setNotifications([]);
-      setUnreadCount(0);
     } finally {
       setLoading(false);
     }
@@ -90,7 +68,7 @@ export function Notifications() {
   // Marcar como leída
   const markAsRead = async (id) => {
     try {
-      await fetch(getApiUrl(`/notifications/${id}/read`), {
+      await fetch(`http://localhost:5000/api/notifications/${id}/read`, {
         method: "PATCH",
       });
       fetchNotifications();
@@ -102,7 +80,7 @@ export function Notifications() {
   // Marcar todas como leídas
   const markAllAsRead = async () => {
     try {
-      await fetch(getApiUrl("/notifications/read/all"), {
+      await fetch("http://localhost:5000/api/notifications/read/all", {
         method: "PATCH",
       });
       fetchNotifications();
@@ -114,7 +92,7 @@ export function Notifications() {
   // Eliminar notificación
   const deleteNotification = async (id) => {
     try {
-      await fetch(getApiUrl(`/notifications/${id}`), {
+      await fetch(`http://localhost:5000/api/notifications/${id}`, {
         method: "DELETE",
       });
       fetchNotifications();
@@ -126,7 +104,7 @@ export function Notifications() {
   // Eliminar todas las leídas
   const deleteAllRead = async () => {
     try {
-      await fetch(getApiUrl("/notifications/read/all"), {
+      await fetch("http://localhost:5000/api/notifications/read/all", {
         method: "DELETE",
       });
       fetchNotifications();

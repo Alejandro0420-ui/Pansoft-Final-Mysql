@@ -1,21 +1,25 @@
 import express from "express";
 import {
+  verifyToken,
+  checkRole,
+} from "../middleware/permissions.middleware.js";
+import {
   createNotification,
   notificationService,
 } from "./notificationService.js";
 
 export default function ordersRoutes(pool) {
   const router = express.Router();
+  const checkRoleWithPool = checkRole(pool);
 
-
-  // Get all orders
-  router.get("/", async (req, res) => {
+  // Get all orders - Requiere autenticación
+  router.get("/", verifyToken, async (req, res) => {
     try {
       const [result] = await pool.query(`
-        SELECT o.*, c.name as customer_name FROM orders o
-        LEFT JOIN customers c ON o.customer_id = c.id
-        ORDER BY o.order_date DESC
-      `);
+          SELECT o.*, c.name as customer_name FROM orders o
+          LEFT JOIN customers c ON o.customer_id = c.id
+          ORDER BY o.order_date DESC
+        `);
       res.json(result);
     } catch (error) {
       console.error("Error al obtener órdenes:", error);
@@ -23,8 +27,8 @@ export default function ordersRoutes(pool) {
     }
   });
 
-  // Get order by ID
-  router.get("/:id", async (req, res) => {
+  // Get order by ID - Requiere autenticación
+  router.get("/:id", verifyToken, async (req, res) => {
     try {
       const { id } = req.params;
       const [order] = await pool.query("SELECT * FROM orders WHERE id = ?", [

@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation, Routes, Route } from "react-router-dom";
-import { getApiUrl } from "./config";
 import { Login } from "./components/login";
 import { Dashboard } from "./components/dashboard";
 import { Inventory } from "./components/inventory";
@@ -12,6 +11,10 @@ import { Billing } from "./components/billing";
 import { Employees } from "./components/employees";
 import { Settings } from "./components/settings";
 import { Notifications } from "./components/notifications";
+import {
+  PermissionsProvider,
+  usePermissions,
+} from "./utils/permissionsContext";
 import {
   LayoutDashboard,
   Package,
@@ -36,8 +39,31 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Detectar cambios de tamaño de pantalla
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      // Cerrar sidebar en móvil
+      if (mobile) {
+        setSidebarOpen(false);
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Cerrar sidebar al cambiar de ruta en móvil
+  useEffect(() => {
+    if (isMobile) {
+      setSidebarOpen(false);
+    }
+  }, [location.pathname, isMobile]);
 
   // Determinar la página actual basada en la ruta
   const getCurrentPageFromPath = () => {
@@ -65,27 +91,12 @@ function App() {
     const fetchUnreadCount = async () => {
       try {
         const response = await fetch(
-          getApiUrl("/notifications/unread/count"),
+          "http://localhost:5000/api/notifications/unread/count",
         );
-        
-        if (!response.ok) {
-          console.warn("Failed to fetch unread count:", response.status);
-          setUnreadCount(0);
-          return;
-        }
-        
         const data = await response.json();
-        
-        // Validar que unreadCount existe
-        if (typeof data.unreadCount === "number") {
-          setUnreadCount(data.unreadCount);
-        } else {
-          console.warn("Invalid unreadCount data:", data);
-          setUnreadCount(0);
-        }
+        setUnreadCount(data.unreadCount || 0);
       } catch (error) {
         console.error("Error obteniendo conteo de notificaciones:", error);
-        setUnreadCount(0);
       }
     };
 
@@ -99,6 +110,7 @@ function App() {
     return <Login onLogin={() => setIsLoggedIn(true)} />;
   }
 
+  // Definir menú items
   const menuItems = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, path: "/" },
     {
@@ -147,6 +159,80 @@ function App() {
     },
   ];
 
+  // Cuando está logueado, envolver con PermissionsProvider
+  return (
+    <PermissionsProvider>
+      <AppContent
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
+        isMobile={isMobile}
+        setIsMobile={setIsMobile}
+        unreadCount={unreadCount}
+        setUnreadCount={setUnreadCount}
+        navigate={navigate}
+        location={location}
+        setIsLoggedIn={setIsLoggedIn}
+        currentPage={currentPage}
+        menuItems={menuItems}
+      />
+    </PermissionsProvider>
+  );
+}
+
+// Componente separado para el contenido dentro del proveedor
+function AppContent({
+  sidebarOpen,
+  setSidebarOpen,
+  isMobile,
+  unreadCount,
+  navigate,
+  location,
+  setIsLoggedIn,
+  currentPage,
+  menuItems,
+}) {
+  // Obtener permisos del contexto
+  const { loading: permissionsLoading, permissions } = usePermissions();
+
+  // Mapeo de IDs del menú a módulos de BD
+  const moduleMap = {
+    dashboard: "dashboard",
+    inventario: "inventory",
+    productos: "products",
+    proveedores: "suppliers",
+    ordenes: "orders",
+    facturacion: "billing",
+    empleados: "employees",
+    reportes: "reports",
+    notificaciones: "notifications",
+    configuracion: "settings",
+  };
+
+  // Filtrar menú items basado en permisos
+  const filteredMenuItems = menuItems.filter((item) => {
+    const module = moduleMap[item.id] || item.id;
+    const hasMenuAccess = permissions[module]?.read || false;
+    // Siempre mostrar dashboard
+    return item.id === "dashboard" || hasMenuAccess;
+  });
+
+  // Mostrar loading mientras se cargan permisos
+  if (permissionsLoading) {
+    return (
+      <div
+        className="d-flex align-items-center justify-content-center"
+        style={{ minHeight: "100vh", backgroundColor: "#f8f9fa" }}
+      >
+        <div className="text-center">
+          <div className="spinner-border text-primary mb-3" role="status">
+            <span className="visually-hidden">Cargando...</span>
+          </div>
+          <p className="text-muted">Cargando permisos...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       className="d-flex"
@@ -179,7 +265,7 @@ function App() {
         {/* Menu */}
         <nav className="flex-grow-1 p-3 overflow-y-auto">
           <div className="nav flex-column">
-            {menuItems.map((item) => {
+            {filteredMenuItems.map((item) => {
               const Icon = item.icon;
               return (
                 <button
@@ -224,33 +310,34 @@ function App() {
       >
         {/* Header */}
         <header
-          className="bg-white border-bottom p-3 d-flex justify-content-between align-items-center"
+          className="bg-white border-bottom p-2 p-sm-3 d-flex justify-content-between align-items-center"
           style={{
             boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-            minHeight: "70px",
+            minHeight: "60px",
             flexShrink: 0,
           }}
         >
           <button
-            className="btn btn-sm btn-light"
+            className="btn btn-sm btn-light d-md-none"
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            style={{ width: "40px", height: "40px" }}
+            style={{ width: "44px", height: "44px", minWidth: "44px" }}
+            title={sidebarOpen ? "Cerrar menú" : "Abrir menú"}
           >
-            {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
+            {sidebarOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
 
-          <div className="d-flex align-items-center gap-3">
+          <div className="d-flex align-items-center gap-2 gap-sm-3 ms-auto">
             <button
-              className="btn btn-light position-relative"
+              className="btn btn-light btn-sm position-relative"
               onClick={() => navigate("/notificaciones")}
-              style={{ width: "40px", height: "40px", cursor: "pointer" }}
+              style={{ width: "44px", height: "44px", minWidth: "44px" }}
               title="Ver notificaciones"
             >
               <Bell size={20} />
               {unreadCount > 0 && (
                 <span
                   className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-                  style={{ fontSize: "10px" }}
+                  style={{ fontSize: "10px", padding: "0.2rem 0.4rem" }}
                 >
                   {unreadCount}
                 </span>
@@ -258,7 +345,7 @@ function App() {
             </button>
             <span
               className="rounded-circle"
-              style={{ width: "40px", height: "40px" }}
+              style={{ width: "40px", height: "40px", minWidth: "40px" }}
             />
           </div>
         </header>

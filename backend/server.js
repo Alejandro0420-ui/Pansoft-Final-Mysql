@@ -14,27 +14,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// ✅ CORS Configuration - Simplificado para Railway
-app.use(cors({
-  origin: true, // Permitir todos los origins por ahora (Railway lo necesita)
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  optionsSuccessStatus: 200
-}));
-
-// ✅ Prevenir caché en endpoints de API
-app.use((req, res, next) => {
-  // No cachear endpoints de API
-  if (req.url.startsWith('/api')) {
-    res.set({
-      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
-      'Pragma': 'no-cache',
-      'Expires': '0',
-    });
-  }
-  next();
-});
+// Middleware
+app.use(cors());
 app.use(express.json({ charset: "utf-8" }));
 app.use(express.static("uploads")); // Servir archivos estáticos
 
@@ -45,35 +26,31 @@ app.use((req, res, next) => {
 });
 
 // MySQL Connection Pool
-// const pool = mysql.createPool({
-//   host: process.env.DB_HOST || "localhost",
-//   user: process.env.DB_USER || "root",
-//   password: process.env.DB_PASSWORD || "",
-//   database: process.env.DB_NAME || "pansoft_db",
-//   port: process.env.DB_PORT || 3306,
-//   waitForConnections: true,
-//   connectionLimit: 10,
-//   queueLimit: 0,
-// });
-
-
-const pool = mysql.createPool(process.env.MYSQL_URL);
-
-
-// console.log("DB Config:", {
-//   host: process.env.DB_HOST,
-//   user: process.env.DB_USER,
-//   password: process.env.DB_PASSWORD ? "***" : "",
-//   database: process.env.DB_NAME,
-//   port: process.env.DB_PORT || 3306,
-// });
+const pool = mysql.createPool({
+  host: process.env.DB_HOST || "localhost",
+  user: process.env.DB_USER || "root",
+  password: process.env.DB_PASSWORD || "",
+  database: process.env.DB_NAME || "pansoft_db",
+  port: process.env.DB_PORT || 3306,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
+});
 
 console.log("DB Config:", {
-  host: process.env.MYSQLHOST?.trim(),
-  user: process.env.MYSQLUSER?.trim(),
-  database: process.env.MYSQLDATABASE?.trim(),
-  port: process.env.MYSQLPORT?.trim(),
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD ? "***" : "",
+  database: process.env.DB_NAME,
+  port: process.env.DB_PORT || 3306,
 });
+
+// console.log("DB Config:", {
+//   host: process.env.MYSQLHOST,
+//   user: process.env.MYSQLUSER,
+//   database: process.env.MYSQLDATABASE,
+//   port: process.env.MYSQLPORT,
+// });
 
 // Test connection
 pool
@@ -101,6 +78,7 @@ import reportsRoutes from "./routes/reports.js";
 import productionOrdersRoutes from "./routes/production-orders.js";
 import salesOrdersRoutes from "./routes/sales-orders.js";
 import notificationsRoutes from "./routes/notifications.js";
+import expiryRoutes from "./routes/expiry.js";
 import {
   checkOverdueInvoices,
   checkUpcomingDueDates,
@@ -108,6 +86,7 @@ import {
   checkLowStockProducts,
   checkLowStockSupplies,
 } from "./routes/notificationService.js";
+import { checkExpiryDates, getExpirySummary } from "./routes/expiryService.js";
 
 // Register routes
 app.use("/api/auth", authRoutes(pool));
@@ -124,82 +103,64 @@ app.use("/api/reports", reportsRoutes(pool));
 app.use("/api/production-orders", productionOrdersRoutes(pool));
 app.use("/api/sales-orders", salesOrdersRoutes(pool));
 app.use("/api/notifications", notificationsRoutes(pool));
+app.use("/api/expiry", expiryRoutes(pool));
 
 // Health check
 app.get("/api/health", (req, res) => {
   res.json({ status: "OK", message: "Backend está funcionando" });
 });
 
-// ===== NOTA =====
-// En Railway, frontend y backend son servicios separados
-// No servir el frontend desde el backend
-// El frontend se sirve desde su propio contenedor en Railway
+// ===== FRONTEND SERVING (PRODUCTION) =====
+// Servir archivos estáticos del frontend compilado
+app.use(express.static(path.join(__dirname, "dist")));
+
+// Redirecccionar todas las rutas al index.html para manejo del routing en frontend
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "dist", "index.html"));
+});
 
 // Función para inicializar la base de datos
 async function initializeDatabase() {
   let connection;
   try {
     connection = await pool.getConnection();
-    console.log("📦 Inicializando base de datos...");
+    console.log(" Inicializando base de datos...");
 
-    // Primero ejecutar el schema completo
-    const schemaPath = path.join(__dirname, "db", "full_schema.sql");
-    if (fs.existsSync(schemaPath)) {
-      console.log("  ✓ Ejecutando full_schema.sql...");
-      let schemaSQL = fs.readFileSync(schemaPath, "utf-8");
-      
-      // Dividir por declaraciones y ejecutar una por una
-      const queries = schemaSQL
-        .split(";")
-        .map((q) => q.trim())
-        .filter((q) => q && !q.startsWith("--"));
+    // Ejecutar archivos SQL críticos
+    const sqlFiles = [
+      "init.sql",
+      "create_orders_tables.sql",
+      "create_supplies_tables.sql",
+      "seed_test_orders.sql",
+    ];
 
-      for (const query of queries) {
-        try {
-          await connection.query(query);
-        } catch (err) {
-          // Ignorar errores de duplicación (tablas que ya existen)
-          if (!err.message.includes("already exists")) {
-            console.warn(`  ⚠️ ${err.message}`);
-          }
-        }
-      }
-      console.log("✓ Schema de base de datos inicializado\n");
-    } else {
-      console.warn(
-        "⚠️ full_schema.sql no encontrado, intentando con init.sql..."
-      );
-      // Fallback a init.sql y create_orders_tables.sql
-      const sqlFiles = ["init.sql", "create_orders_tables.sql"];
+    for (const file of sqlFiles) {
+      const filePath = path.join(__dirname, "db", file);
+      if (fs.existsSync(filePath)) {
+        let sql = fs.readFileSync(filePath, "utf-8");
 
-      for (const file of sqlFiles) {
-        const filePath = path.join(__dirname, "db", file);
-        if (fs.existsSync(filePath)) {
-          let sql = fs.readFileSync(filePath, "utf-8");
+        const queries = sql.split(";").filter((q) => q.trim());
 
-          const queries = sql
-            .split(";")
-            .map((q) => q.trim())
-            .filter((q) => q);
-
-          for (const query of queries) {
-            if (query.trim()) {
-              try {
-                await connection.query(query);
-              } catch (error) {
-                if (
-                  !error.message.includes("already exists") &&
-                  !error.message.includes("CONSTRAINT") &&
-                  !error.message.includes("foreign key")
-                ) {
-                  console.warn(`  ⚠️ ${file}: ${error.message}`);
-                }
+        for (const query of queries) {
+          if (query.trim()) {
+            try {
+              await connection.query(query);
+            } catch (error) {
+              // Ignorar errores de tablas que ya existen
+              if (
+                !error.message.includes("already exists") &&
+                !error.message.includes("CONSTRAINT") &&
+                !error.message.includes("foreign key")
+              ) {
+                console.warn(`    ${file}: ${error.message}`);
               }
             }
           }
         }
       }
     }
+
+    console.log("✓ Base de datos inicializada correctamente\n");
 
     // Asegurar que suppliers tiene las columnas is_active y category
     try {
@@ -286,8 +247,6 @@ async function startServer() {
 
     app.listen(PORT, () => {
       console.log(`🚀 Servidor Pansoft ejecutándose en puerto ${PORT}`);
-      console.log(`✅ VERSIÓN ACTUALIZADA - API Routes están habilitadas correctamente`);
-      console.log(`✅ NO hay wildcard catch-all para frontend`);
 
       // ===== TAREAS PROGRAMADAS DE NOTIFICACIONES =====
       console.log("⏰ Configurando tareas programadas de notificaciones...\n");
@@ -399,6 +358,28 @@ async function startServer() {
           console.error("❌ Error:", err.message),
         );
       }, 150000);
+
+      // 6. Verificar productos vencidos cada 1 hora
+      console.log("  ✓ Verificación de productos vencidos cada 1 hora");
+      setInterval(() => {
+        console.log("🔔 [Tarea] Verificando productos próximos a vencer...");
+        checkExpiryDates(pool).catch((err) =>
+          console.error(
+            "❌ Error en verificación de caducidad:",
+            err.message,
+          ),
+        );
+      }, 3600000); // 1 hora
+
+      // Ejecutar verificación de caducidad en los primeros 180 segundos
+      setTimeout(() => {
+        console.log(
+          "🔔 [Tarea] Verificación inicial de productos próximos a vencer",
+        );
+        checkExpiryDates(pool).catch((err) =>
+          console.error("❌ Error:", err.message),
+        );
+      }, 180000);
 
       console.log("\n✅ Tareas programadas configuradas correctamente\n");
     });

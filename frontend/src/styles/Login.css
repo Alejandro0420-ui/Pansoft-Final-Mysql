@@ -1,3 +1,66 @@
-#pansoft-logo{
+#pansoft-logo {
   max-width: 200px;
+  width: 100%;
+  height: auto;
+}
+
+/* Mobile - Extra Small (< 576px) */
+@media (max-width: 575.98px) {
+  #pansoft-logo {
+    max-width: 120px;
+  }
+
+  .card-body {
+    padding: 1rem !important;
+  }
+
+  .form-label {
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .form-control {
+    font-size: 16px !important; /* Prevent zoom on iOS */
+    padding: 0.6rem 0.75rem !important;
+  }
+
+  .btn {
+    font-size: 0.95rem;
+    padding: 0.6rem !important;
+  }
+
+  .alert {
+    font-size: 0.9rem;
+    padding: 0.75rem !important;
+  }
+
+  .text-muted {
+    font-size: 0.75rem !important;
+  }
+}
+
+/* Tablet - Small (576px to 767px) */
+@media (min-width: 576px) and (max-width: 767.98px) {
+  #pansoft-logo {
+    max-width: 150px;
+  }
+
+  .card-body {
+    padding: 1.5rem !important;
+  }
+
+  .form-control {
+    font-size: 15px;
+  }
+}
+
+/* Tablet and up (768px+) */
+@media (min-width: 768px) {
+  #pansoft-logo {
+    max-width: 200px;
+  }
+
+  .card-body {
+    padding: 2rem !important;
+  }
 }

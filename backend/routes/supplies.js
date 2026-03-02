@@ -12,19 +12,12 @@ export default function suppliesRoutes(pool) {
   // Get all supplies
   router.get("/", async (req, res) => {
     try {
-      console.log("✅ [API/SUPPLIES] GET / - Ruta está siendo ejecutada correctamente");
-      
       const [result] = await pool.query(
         "SELECT * FROM supplies ORDER BY name ASC",
       );
-      
-      console.log(`✅ [API/SUPPLIES] Retornando ${result.length} insumos como JSON`);
-      
-      res.setHeader("Content-Type", "application/json; charset=utf-8");
       res.json(result);
     } catch (error) {
       console.error("Error detallado al obtener insumos:", error);
-      res.setHeader("Content-Type", "application/json; charset=utf-8");
       res
         .status(500)
         .json({ error: "Error al obtener insumos", details: error.message });
@@ -231,6 +224,7 @@ export default function suppliesRoutes(pool) {
         stock_quantity,
         min_stock_level,
         unit,
+        expiry_date,
       } = req.body;
 
       // Validar campos requeridos
@@ -265,7 +259,7 @@ export default function suppliesRoutes(pool) {
       const imageUrl = req.file ? `/images/${req.file.filename}` : null;
 
       const [result] = await pool.query(
-        "INSERT INTO supplies (name, sku, description, category, price, stock_quantity, min_stock_level, unit, image_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO supplies (name, sku, description, category, price, stock_quantity, min_stock_level, unit, image_url, expiry_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         [
           name,
           sku,
@@ -276,6 +270,7 @@ export default function suppliesRoutes(pool) {
           min_stock_level,
           unit,
           imageUrl,
+          expiry_date || null,
         ],
       );
 
@@ -323,6 +318,8 @@ export default function suppliesRoutes(pool) {
         stock_quantity,
         min_stock_level,
         unit,
+        expiry_date,
+        supplier_id,
         movementType = "ajuste",
         reason = "",
         notes = "",
@@ -335,6 +332,7 @@ export default function suppliesRoutes(pool) {
       console.log(`[PUT /supplies/${id}] Iniciando actualización...`, {
         finalQuantity,
         movementType,
+        supplier_id,
       });
 
       // Obtener conexión para transacción
@@ -362,43 +360,54 @@ export default function suppliesRoutes(pool) {
       await connection.query("START TRANSACTION");
 
       try {
-        // Build base update query
-        let query =
-          "UPDATE supplies SET name=?, sku=?, category=?, price=?, stock_quantity=?, min_stock_level=?, unit=?, updated_at=NOW()";
+        // Build base update query with or without description
+        let updateFields = [
+          "name=?",
+          "sku=?",
+          "category=?",
+          "price=?",
+          "stock_quantity=?",
+          "min_stock_level=?",
+          "unit=?",
+          "expiry_date=?",
+        ];
         let params = [
           name,
           sku,
           category,
-          price,
+          parseFloat(price) || 0,
           newQuantity,
-          min_stock_level,
+          parseInt(min_stock_level) || 0,
           unit,
+          expiry_date || null,
         ];
 
         // Agregar description solo si se proporciona
         if (description !== undefined && description !== null) {
-          query =
-            "UPDATE supplies SET name=?, sku=?, description=?, category=?, price=?, stock_quantity=?, min_stock_level=?, unit=?, updated_at=NOW()";
-          params = [
-            name,
-            sku,
-            description,
-            category,
-            price,
-            newQuantity,
-            min_stock_level,
-            unit,
-          ];
+          updateFields.splice(2, 0, "description=?");
+          params.splice(2, 0, description);
         }
 
-        if (req.file) {
-          query += ", image_url=?";
-          params.push(`/images/${req.file.filename}`);
+        // Agregar supplier_id si existe en la tabla
+        if (supplier_id !== undefined && supplier_id !== null) {
+          updateFields.push("supplier_id=?");
+          params.push(parseInt(supplier_id) || null);
         }
 
-        query += " WHERE id=?";
+        updateFields.push("updated_at=NOW()");
+
+        let query = `UPDATE supplies SET ${updateFields.join(", ")} WHERE id=?`;
         params.push(id);
 
+        if (req.file) {
+          query = query.replace("updated_at=NOW()", "image_url=?, updated_at=NOW()");
+          params.splice(params.length - 1, 0, `/images/${req.file.filename}`);
+        }
+
+        console.log(
+          `[PUT /supplies/${id}] Query: ${query}`,
+          `[PUT /supplies/${id}] Params: ${JSON.stringify(params)}`,
+        );
         console.log(
           `[PUT /supplies/${id}] Actualizando cantidad: ${previousQuantity} -> ${newQuantity}`,
         );
@@ -469,10 +478,16 @@ export default function suppliesRoutes(pool) {
         throw txError;
       }
     } catch (error) {
-      console.error(`[PUT /supplies] Error:`, error.message);
+      console.error(
+        `[PUT /supplies/${id}] Error detallado:`,
+        error.message,
+        error.sql || "",
+        error.sqlState || "",
+      );
       res.status(500).json({
         error: "Error al actualizar insumo",
         details: error.message,
+        sql: error.sql || "",
       });
     } finally {
       if (connection) {

@@ -1,7 +1,7 @@
 import { Plus, Trash2 } from "lucide-react";
 import { Modal } from "../common/Modal";
 import { FormInput } from "../common/FormInput";
-import { PRODUCT_PRICES, EMPLOYEES, THEME_COLORS } from "./constants";
+import { EMPLOYEES, THEME_COLORS, PRODUCT_PRICES } from "./constants";
 
 export function OrderFormModal({
   isOpen,
@@ -17,6 +17,9 @@ export function OrderFormModal({
   onAddSalesItem,
   onRemoveSalesItem,
   onNewSalesItemChange,
+  products = [],
+  categories = [],
+  getProductsByCategory = () => [],
 }) {
   const isSalesOrder = activeTab === "sales";
   const form = ordersForm;
@@ -27,6 +30,11 @@ export function OrderFormModal({
 
   const formatCurrency = (amount) =>
     `$${Number(amount).toLocaleString("es-CO")}`;
+
+  // Obtener productos filtrados por categoría
+  const filteredProducts = newSalesItem.category
+    ? getProductsByCategory(newSalesItem.category)
+    : [];
 
   return (
     <Modal
@@ -73,16 +81,47 @@ export function OrderFormModal({
             {/* Agregar Productos */}
             <div className="border p-3 rounded">
               <h6 className="mb-3">Agregar Productos</h6>
+              <div className="row g-2 mb-2">
+                <div className="col-md-12">
+                  <FormInput
+                    label="Categoría *"
+                    type="select"
+                    options={[
+                      { value: "", label: "Seleccionar categoría..." },
+                      ...categories.map((cat) => ({
+                        value: cat,
+                        label: cat,
+                      })),
+                    ]}
+                    value={newSalesItem.category || ""}
+                    onChange={(value) =>
+                      onNewSalesItemChange({
+                        ...newSalesItem,
+                        category: value,
+                        product: "",
+                      })
+                    }
+                  />
+                </div>
+              </div>
               <div className="row g-2">
                 <div className="col-md-7">
                   <FormInput
-                    label="Producto"
+                    label="Producto *"
                     type="select"
+                    disabled={!newSalesItem.category}
                     options={[
-                      { value: "", label: "Seleccionar..." },
-                      ...Object.keys(PRODUCT_PRICES).map((p) => ({
-                        value: p,
-                        label: `${p} - $${PRODUCT_PRICES[p].toLocaleString("es-CO")}`,
+                      {
+                        value: "",
+                        label: !newSalesItem.category
+                          ? "Selecciona categoría"
+                          : "Seleccionar...",
+                      },
+                      ...filteredProducts.map((p) => ({
+                        value: p.name,
+                        label: `${p.name} - $${Number(
+                          p.price || 0,
+                        ).toLocaleString("es-CO")}`,
                       })),
                     ]}
                     value={newSalesItem.product || ""}
