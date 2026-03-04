@@ -170,25 +170,26 @@ export function OrderDetailsModal({
           <hr />
 
           {/* Items/Insumos */}
-          <h6 className="mb-3">
-            {isSalesOrder ? "Items de la Orden" : "Insumos"}
-          </h6>
+          <div style={{ maxHeight: "400px", overflowY: "auto" }}>
+            <h6 className="mb-3">
+              {isSalesOrder ? "Items de la Orden" : "Insumos"}
+            </h6>
 
-          {items && items.length > 0 ? (
-            <div className="table-responsive">
-              <table className="table table-sm table-hover">
-                <thead className="table-light">
-                  <tr>
-                    {isSalesOrder && <th>Producto</th>}
-                    {isSalesOrder && <th>Precio</th>}
-                    <th>Cantidad</th>
-                    {isSalesOrder && <th>Total</th>}
-                    <th>Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {items.map((item) => (
-                    <tr key={item.id}>
+            {items && items.length > 0 ? (
+              <div className="table-responsive">
+                <table className="table table-sm table-hover">
+                  <thead className="table-light">
+                    <tr>
+                      {isSalesOrder && <th>Producto</th>}
+                      {isSalesOrder && <th>Precio</th>}
+                      <th>Cantidad</th>
+                      {isSalesOrder && <th>Total</th>}
+                      <th>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {items.map((item) => (
+                      <tr key={item.id}>
                       {isSalesOrder && (
                         <td>
                           {item.product_name || item.soi_product_id || "-"}
@@ -265,10 +266,11 @@ export function OrderDetailsModal({
                   ))}
                 </tbody>
               </table>
-            </div>
-          ) : (
-            <p className="text-muted">No hay items en esta orden</p>
-          )}
+              </div>
+            ) : (
+              <p className="text-muted">No hay items en esta orden</p>
+            )}
+          </div>
 
           {/* Botones */}
           <div className="mt-4">

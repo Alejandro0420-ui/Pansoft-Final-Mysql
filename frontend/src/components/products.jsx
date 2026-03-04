@@ -7,7 +7,7 @@ import { ProductsSection } from "./ProductsSection";
 import { SuppliesSection } from "./SuppliesSection";
 
 const FINISHED_PRODUCTS_CATEGORIES = [
-  "Panes",
+  "Panadería",
   "Pastelería",
   "Tortas",
   "Donas",
@@ -32,7 +32,6 @@ export function Products() {
   const [editingProduct, setEditingProduct] = useState(null);
   const [products, setProducts] = useState([]);
   const [supplies, setSupplies] = useState([]);
-  const [imageFile, setImageFile] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -59,8 +58,19 @@ export function Products() {
       ]);
       console.log("✅ Productos recibidos:", productsRes);
       console.log("✅ Insumos recibidos:", suppliesRes);
-      setProducts(productsRes.data || productsRes || []);
-      setSupplies(suppliesRes.data || suppliesRes || []);
+      
+      // Ordenar productos: habilitados primero, deshabilitados al final
+      const sortedProducts = (productsRes.data || productsRes || []).sort(
+        (a, b) => (b.is_active || 0) - (a.is_active || 0)
+      );
+      
+      // Ordenar insumos: habilitados primero, deshabilitados al final
+      const sortedSupplies = (suppliesRes.data || suppliesRes || []).sort(
+        (a, b) => (b.is_active || 0) - (a.is_active || 0)
+      );
+      
+      setProducts(sortedProducts);
+      setSupplies(sortedSupplies);
     } catch (error) {
       console.error("❌ Error cargando datos:", error);
       toast.error("Error al cargar datos");
@@ -79,7 +89,6 @@ export function Products() {
       unit: "kg",
       expiry_date: "",
     });
-    setImageFile(null);
     setEditingProduct(null);
   };
 
@@ -178,11 +187,6 @@ export function Products() {
       data.append("min_stock_level", formData.min_stock_level || 0);
       if (activeTab === "insumos") {
         data.append("unit", formData.unit || "kg");
-      }
-
-      // Agregar imagen si existe
-      if (imageFile) {
-        data.append("image", imageFile);
       }
 
       let response;
@@ -463,17 +467,7 @@ export function Products() {
                       <option value="un">un</option>
                     </select>
                   </div>
-                  <div className="col-md-6">
-                    <label className="form-label">Imagen (Opcional)</label>
-                    <input
-                      type="file"
-                      className="form-control"
-                      accept="image/*"
-                      onChange={(e) =>
-                        setImageFile(e.target.files?.[0] || null)
-                      }
-                    />
-                  </div>
+
                 </div>
               </div>
               <div className="modal-footer border-top-0">

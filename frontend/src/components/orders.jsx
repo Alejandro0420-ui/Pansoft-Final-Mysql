@@ -4,6 +4,7 @@ import {
   salesOrdersAPI,
   productionOrdersAPI,
   productsAPI,
+  employeesAPI,
 } from "../services/api";
 import "bootstrap/dist/css/bootstrap.min.css";
 
@@ -16,7 +17,7 @@ import { ProductionOrdersTable } from "./orders/ProductionOrdersTable";
 import { OrderFormModal } from "./orders/OrderFormModal";
 import { SuppliesModal } from "./orders/SuppliesModalNew";
 import { OrderDetailsModal } from "./orders/OrderDetailsModal";
-import { EMPLOYEES, THEME_COLORS } from "./orders/constants";
+import { THEME_COLORS } from "./orders/constants";
 
 export function Orders() {
   // Usar el hook personalizado para la lógica de órdenes
@@ -53,9 +54,11 @@ export function Orders() {
   const [productionForm, setProductionForm] = useState({
     product: "",
     quantity: "",
-    responsible: "",
+    responsible_employee_id: "",
   });
   const [supplies, setSupplies] = useState([]);
+  const [employees, setEmployees] = useState([]);
+  const [employeesLoading, setEmployeesLoading] = useState(true);
 
   // Cargar productos dinámicamente
   useEffect(() => {
@@ -83,6 +86,28 @@ export function Orders() {
       }
     };
     loadProducts();
+  }, []);
+
+  // Cargar empleados dinámicamente
+  useEffect(() => {
+    const loadEmployees = async () => {
+      try {
+        setEmployeesLoading(true);
+        const response = await employeesAPI.getAll();
+        // Filtrar solo empleados activos
+        const activeEmployees = (response.data || []).filter(
+          (emp) => emp.status === "active"
+        );
+        setEmployees(activeEmployees);
+      } catch (error) {
+        console.error("Error cargando empleados:", error);
+        toast.error("Error al cargar empleados");
+        setEmployees([]);
+      } finally {
+        setEmployeesLoading(false);
+      }
+    };
+    loadEmployees();
   }, []);
 
   // Obtener categorías únicas
@@ -118,17 +143,38 @@ export function Orders() {
     }
 
     const unitPrice = selectedProduct.price || 0;
-    setSalesItems([
-      ...salesItems,
-      {
-        product: newSalesItem.product,
-        quantity: parseInt(newSalesItem.quantity),
-        unitPrice,
-        total: unitPrice * parseInt(newSalesItem.quantity),
-      },
-    ]);
+    const quantity = parseInt(newSalesItem.quantity);
+    
+    // Verificar si el producto ya existe en la lista
+    const existingItemIndex = salesItems.findIndex(
+      (item) => item.product === newSalesItem.product,
+    );
+
+    if (existingItemIndex >= 0) {
+      // Si existe, sumar la cantidad al item existente
+      const updatedItems = [...salesItems];
+      updatedItems[existingItemIndex] = {
+        ...updatedItems[existingItemIndex],
+        quantity: updatedItems[existingItemIndex].quantity + quantity,
+        total: (updatedItems[existingItemIndex].quantity + quantity) * unitPrice,
+      };
+      setSalesItems(updatedItems);
+      toast.success("Cantidad actualizada");
+    } else {
+      // Si no existe, agregar como nuevo item
+      setSalesItems([
+        ...salesItems,
+        {
+          product: newSalesItem.product,
+          quantity,
+          unitPrice,
+          total: unitPrice * quantity,
+        },
+      ]);
+      toast.success("Producto agregado");
+    }
+    
     setNewSalesItem({ category: "", product: "", quantity: 1 });
-    toast.success("Producto agregado");
   };
 
   // Remover item de la orden de venta
@@ -191,9 +237,9 @@ export function Orders() {
     if (
       !productionForm.product ||
       !productionForm.quantity ||
-      !productionForm.responsible
+      !productionForm.responsible_employee_id
     ) {
-      toast.error("Complete todos los campos");
+      toast.error("Complete todos los campos requeridos");
       return;
     }
 
@@ -203,7 +249,7 @@ export function Orders() {
         await productionOrdersAPI.update(selectedOrder.id, {
           product_name: productionForm.product,
           quantity: parseInt(productionForm.quantity),
-          responsible_employee_id: Math.floor(Math.random() * 5) + 1,
+          responsible_employee_id: parseInt(productionForm.responsible_employee_id),
           status: selectedOrder.status,
           notes: "",
         });
@@ -212,7 +258,7 @@ export function Orders() {
         await productionOrdersAPI.create({
           product_name: productionForm.product,
           quantity: parseInt(productionForm.quantity),
-          responsible_employee_id: Math.floor(Math.random() * 5) + 1,
+          responsible_employee_id: parseInt(productionForm.responsible_employee_id),
           status: "pendiente",
           notes: "",
         });
@@ -228,19 +274,39 @@ export function Orders() {
     }
   };
 
-  const openEditModal = (order) => {
+  const openEditModal = async (order) => {
     setSelectedOrder(order);
     setIsEditing(true);
     if (activeTab === "sales") {
       setSalesForm({
         client: order.client,
       });
-      setSalesItems([]);
+      // Cargar los items de la orden existente
+      try {
+        const response = await salesOrdersAPI.getById(order.id);
+        const items = response.data.items || [];
+        // Mapear items al formato esperado con conversión a números
+        const mappedItems = items.map((item) => {
+          const quantity = parseInt(item.quantity) || 0;
+          const unitPrice = parseFloat(item.unit_price) || 0;
+          const total = parseFloat(item.total) || (quantity * unitPrice) || 0;
+          return {
+            product: item.product_name,
+            quantity,
+            unitPrice,
+            total,
+          };
+        });
+        setSalesItems(mappedItems);
+      } catch (error) {
+        console.error("Error cargando items de la orden:", error);
+        setSalesItems([]);
+      }
     } else {
       setProductionForm({
         product: order.product,
         quantity: order.quantity.toString(),
-        responsible: order.responsible,
+        responsible_employee_id: order.responsible_employee_id || "",
       });
     }
     setShowModal(true);
@@ -265,7 +331,7 @@ export function Orders() {
     setSalesForm({ client: "" });
     setSalesItems([]);
     setNewSalesItem({ category: "", product: "", quantity: 1 });
-    setProductionForm({ product: "", quantity: "", responsible: "" });
+    setProductionForm({ product: "", quantity: "", responsible_employee_id: "" });
     setSupplies([]);
     setIsEditing(false);
     setSelectedOrder(null);
@@ -352,14 +418,6 @@ export function Orders() {
               orders={filteredProductionOrders}
               loading={loading}
               onEdit={openEditModal}
-              onViewDetails={(order) => {
-                setSelectedOrder(order);
-                setShowDetailsModal(true);
-              }}
-              onViewSupplies={(order) => {
-                setSelectedOrder(order);
-                setShowSuppliesModal(true);
-              }}
               onUpdateStatus={updateStatus}
             />
           )}
@@ -393,6 +451,7 @@ export function Orders() {
         products={products}
         categories={getCategories()}
         getProductsByCategory={getProductsByCategory}
+        employees={employees}
       />
 
       {/* Modal de Insumos */}

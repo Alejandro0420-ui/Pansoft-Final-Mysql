@@ -43,7 +43,7 @@ export default function authRoutes(pool) {
       // Validar contraseña con bcrypt
       let passwordIsValid = await bcrypt.compare(password, user.password);
 
-      // 🔄 MIGRACIÓN: Si falla bcrypt, intentar con texto plano (usuarios antiguos)
+      // MIGRACIÓN: Si falla bcrypt, intentar con texto plano (usuarios antiguos)
       if (!passwordIsValid && user.password === password) {
         passwordIsValid = true;
         // Hashear y actualizar la contraseña en la BD

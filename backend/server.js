@@ -174,7 +174,7 @@ async function initializeDatabase() {
         console.log("  ✓ Columna is_active agregada");
       } catch (err) {
         if (!err.message.includes("already exists")) {
-          console.warn("  ⚠️  Error con is_active:", err.message);
+          console.warn("    Error con is_active:", err.message);
         }
       }
 
@@ -186,7 +186,7 @@ async function initializeDatabase() {
         console.log("  ✓ Columna category agregada");
       } catch (err) {
         if (!err.message.includes("already exists")) {
-          console.warn("  ⚠️  Error con category:", err.message);
+          console.warn("   Error con category:", err.message);
         }
       }
 
@@ -226,13 +226,13 @@ async function initializeDatabase() {
           );
         }
       } catch (error) {
-        console.warn("⚠️  No se pudo migrar órdenes de venta:", error.message);
+        console.warn("  No se pudo migrar órdenes de venta:", error.message);
       }
     } catch (error) {
-      console.warn("⚠️  Error verificando suppliers:", error.message);
+      console.warn("  Error verificando suppliers:", error.message);
     }
   } catch (error) {
-    console.error("⚠️  Error durante inicialización de BD:", error.message);
+    console.error("  Error durante inicialización de BD:", error.message);
   } finally {
     if (connection) {
       connection.release();
@@ -246,18 +246,18 @@ async function startServer() {
     await initializeDatabase();
 
     app.listen(PORT, () => {
-      console.log(`🚀 Servidor Pansoft ejecutándose en puerto ${PORT}`);
+      console.log(` Servidor Pansoft ejecutándose en puerto ${PORT}`);
 
       // ===== TAREAS PROGRAMADAS DE NOTIFICACIONES =====
-      console.log("⏰ Configurando tareas programadas de notificaciones...\n");
+      console.log(" Configurando tareas programadas de notificaciones...\n");
 
       // 1. Verificar facturas vencidas cada hora
-      console.log("  ✓ Verificación de facturas vencidas cada hora");
+      console.log("   Verificación de facturas vencidas cada hora");
       setInterval(() => {
-        console.log("🔔 [Tarea] Verificando facturas vencidas...");
+        console.log(" [Tarea] Verificando facturas vencidas...");
         checkOverdueInvoices(pool).catch((err) =>
           console.error(
-            "❌ Error en verificación de facturas vencidas:",
+            "Error en verificación de facturas vencidas:",
             err.message,
           ),
         );
@@ -265,9 +265,9 @@ async function startServer() {
 
       // Ejecutar en los primeros 30 segundos
       setTimeout(() => {
-        console.log("🔔 [Tarea] Verificación inicial de facturas vencidas");
+        console.log(" [Tarea] Verificación inicial de facturas vencidas");
         checkOverdueInvoices(pool).catch((err) =>
-          console.error("❌ Error:", err.message),
+          console.error(" Error:", err.message),
         );
       }, 30000);
 
@@ -276,10 +276,10 @@ async function startServer() {
         "  ✓ Verificación de facturas próximas a vencer cada 12 horas",
       );
       setInterval(() => {
-        console.log("🔔 [Tarea] Verificando facturas próximas a vencer...");
+        console.log(" [Tarea] Verificando facturas próximas a vencer...");
         checkUpcomingDueDates(pool, 3).catch((err) =>
           console.error(
-            "❌ Error en verificación de próximas facturas:",
+            " Error en verificación de próximas facturas:",
             err.message,
           ),
         );
@@ -287,19 +287,19 @@ async function startServer() {
 
       // Ejecutar en los primeros 60 segundos
       setTimeout(() => {
-        console.log("🔔 [Tarea] Verificación inicial de próximas facturas");
+        console.log(" [Tarea] Verificación inicial de próximas facturas");
         checkUpcomingDueDates(pool, 3).catch((err) =>
-          console.error("❌ Error:", err.message),
+          console.error(" Error:", err.message),
         );
       }, 60000);
 
       // 3. Verificar stock crítico cada 30 minutos
-      console.log("  ✓ Verificación de stock crítico cada 30 minutos");
+      console.log("   Verificación de stock crítico cada 30 minutos");
       setInterval(() => {
-        console.log("🔔 [Tarea] Verificando stock crítico...");
+        console.log(" [Tarea] Verificando stock crítico...");
         checkCriticalStock(pool).catch((err) =>
           console.error(
-            "❌ Error en verificación de stock crítico:",
+            " Error en verificación de stock crítico:",
             err.message,
           ),
         );
@@ -307,9 +307,9 @@ async function startServer() {
 
       // Ejecutar en los primeros 90 segundos
       setTimeout(() => {
-        console.log("🔔 [Tarea] Verificación inicial de stock crítico");
+        console.log(" [Tarea] Verificación inicial de stock crítico");
         checkCriticalStock(pool).catch((err) =>
-          console.error("❌ Error:", err.message),
+          console.error(" Error:", err.message),
         );
       }, 90000);
 
@@ -318,10 +318,10 @@ async function startServer() {
         "  ✓ Verificación de productos con stock bajo cada 45 minutos",
       );
       setInterval(() => {
-        console.log("🔔 [Tarea] Verificando productos con stock bajo...");
+        console.log(" [Tarea] Verificando productos con stock bajo...");
         checkLowStockProducts(pool).catch((err) =>
           console.error(
-            "❌ Error en verificación de productos bajo stock:",
+            " Error en verificación de productos bajo stock:",
             err.message,
           ),
         );
@@ -330,20 +330,20 @@ async function startServer() {
       // Ejecutar en los primeros 120 segundos
       setTimeout(() => {
         console.log(
-          "🔔 [Tarea] Verificación inicial de productos con stock bajo",
+          " [Tarea] Verificación inicial de productos con stock bajo",
         );
         checkLowStockProducts(pool).catch((err) =>
-          console.error("❌ Error:", err.message),
+          console.error(" Error:", err.message),
         );
       }, 120000);
 
       // 5. Verificar insumos con stock bajo cada 45 minutos
-      console.log("  ✓ Verificación de insumos con stock bajo cada 45 minutos");
+      console.log("   Verificación de insumos con stock bajo cada 45 minutos");
       setInterval(() => {
-        console.log("🔔 [Tarea] Verificando insumos con stock bajo...");
+        console.log(" [Tarea] Verificando insumos con stock bajo...");
         checkLowStockSupplies(pool).catch((err) =>
           console.error(
-            "❌ Error en verificación de insumos bajo stock:",
+            " Error en verificación de insumos bajo stock:",
             err.message,
           ),
         );
@@ -352,20 +352,20 @@ async function startServer() {
       // Ejecutar en los primeros 150 segundos
       setTimeout(() => {
         console.log(
-          "🔔 [Tarea] Verificación inicial de insumos con stock bajo",
+          " [Tarea] Verificación inicial de insumos con stock bajo",
         );
         checkLowStockSupplies(pool).catch((err) =>
-          console.error("❌ Error:", err.message),
+          console.error(" Error:", err.message),
         );
       }, 150000);
 
       // 6. Verificar productos vencidos cada 1 hora
-      console.log("  ✓ Verificación de productos vencidos cada 1 hora");
+      console.log("   Verificación de productos vencidos cada 1 hora");
       setInterval(() => {
-        console.log("🔔 [Tarea] Verificando productos próximos a vencer...");
+        console.log(" [Tarea] Verificando productos próximos a vencer...");
         checkExpiryDates(pool).catch((err) =>
           console.error(
-            "❌ Error en verificación de caducidad:",
+            " Error en verificación de caducidad:",
             err.message,
           ),
         );
@@ -374,14 +374,14 @@ async function startServer() {
       // Ejecutar verificación de caducidad en los primeros 180 segundos
       setTimeout(() => {
         console.log(
-          "🔔 [Tarea] Verificación inicial de productos próximos a vencer",
+          " [Tarea] Verificación inicial de productos próximos a vencer",
         );
         checkExpiryDates(pool).catch((err) =>
-          console.error("❌ Error:", err.message),
+          console.error(" Error:", err.message),
         );
       }, 180000);
 
-      console.log("\n✅ Tareas programadas configuradas correctamente\n");
+      console.log("\n Tareas programadas configuradas correctamente\n");
     });
   } catch (error) {
     console.error("Error al iniciar servidor:", error);

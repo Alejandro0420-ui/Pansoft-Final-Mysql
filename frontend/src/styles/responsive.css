@@ -176,32 +176,37 @@
 
   /* Modals */
   .modal {
-    padding: 0.5rem !important;
+    padding: 0 !important;
   }
 
   .modal-dialog {
     max-width: calc(100vw - 1rem) !important;
     width: 100% !important;
-    margin: 0.5rem auto !important;
+    margin: auto !important;
   }
 
   .modal-content {
     border-radius: 0.5rem;
+    padding: 0 !important;
+    margin: 0 !important;
   }
 
   .modal-header {
-    padding: 0.75rem !important;
+    padding: 1rem !important;
+    margin: 0 !important;
   }
 
   .modal-body {
-    padding: 0.75rem !important;
+    padding: 1rem !important;
+    margin: 0 !important;
     font-size: 0.9rem;
     max-height: calc(90vh - 200px);
     overflow-y: auto;
   }
 
   .modal-footer {
-    padding: 0.5rem !important;
+    padding: 1rem !important;
+    margin: 0 !important;
     gap: 0.25rem !important;
     flex-direction: column-reverse;
   }

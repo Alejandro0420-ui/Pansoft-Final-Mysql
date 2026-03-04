@@ -1,4 +1,4 @@
-import { Edit2, CheckCircle, XCircle, Wheat, Eye } from "lucide-react";
+import { Edit2, CheckCircle, XCircle } from "lucide-react";
 import { StatusBadge } from "./StatusBadge";
 import { THEME_COLORS } from "./constants";
 
@@ -6,8 +6,6 @@ export function ProductionOrdersTable({
   orders,
   loading,
   onEdit,
-  onViewDetails,
-  onViewSupplies,
   onUpdateStatus,
 }) {
   return (
@@ -39,23 +37,6 @@ export function ProductionOrdersTable({
               <tr key={order.id} className="align-middle">
                 <td>
                   <strong>{order.orderNo || order.order_number}</strong>
-                  {order.supplies?.length > 0 && (
-                    <span
-                      className="badge ms-2"
-                      style={{
-                        backgroundColor: THEME_COLORS.primary,
-                        color: "white",
-                        fontSize: "10px",
-                      }}
-                    >
-                      <Wheat
-                        size={10}
-                        className="me-1"
-                        style={{ display: "inline" }}
-                      />
-                      {order.supplies.length}
-                    </span>
-                  )}
                 </td>
                 <td>{order.product_name || order.product}</td>
                 <td>{order.quantity}</td>
@@ -74,32 +55,26 @@ export function ProductionOrdersTable({
                 <td>
                   <div className="btn-group btn-group-sm">
                     <button
-                      className="btn btn-outline-secondary"
-                      onClick={() => onViewDetails(order)}
-                      title="Ver detalles"
-                      disabled={loading}
-                    >
-                      <Eye size={14} />
-                    </button>
-                    <button
-                      className="btn btn-outline-secondary"
-                      onClick={() => onViewSupplies(order)}
-                      title="Ver insumos"
-                      disabled={loading}
-                    >
-                      <Wheat size={14} />
-                    </button>
-                    <button
-                      className="btn btn-outline-secondary"
+                      className="btn"
+                      style={{
+                        backgroundColor: "#0d6efd",
+                        color: "white",
+                        border: "none",
+                      }}
                       onClick={() => onEdit(order)}
                       title="Editar"
                       disabled={loading}
                     >
                       <Edit2 size={14} />
                     </button>
-                    {order.status !== "completada" && (
+                    {order.status !== "completada" && order.status !== "cancelada" && (
                       <button
-                        className="btn btn-outline-secondary"
+                        className="btn"
+                        style={{
+                          backgroundColor: "#198754",
+                          color: "white",
+                          border: "none",
+                        }}
                         onClick={() => onUpdateStatus(order.id, "completada")}
                         title="Completar"
                         disabled={loading}
@@ -107,9 +82,14 @@ export function ProductionOrdersTable({
                         <CheckCircle size={14} />
                       </button>
                     )}
-                    {order.status !== "cancelada" && (
+                    {order.status !== "cancelada" && order.status !== "completada" && (
                       <button
-                        className="btn btn-outline-secondary"
+                        className="btn"
+                        style={{
+                          backgroundColor: "#dc3545",
+                          color: "white",
+                          border: "none",
+                        }}
                         onClick={() => onUpdateStatus(order.id, "cancelada")}
                         title="Cancelar"
                         disabled={loading}

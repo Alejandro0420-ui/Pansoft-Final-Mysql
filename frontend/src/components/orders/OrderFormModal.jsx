@@ -1,7 +1,7 @@
 import { Plus, Trash2 } from "lucide-react";
 import { Modal } from "../common/Modal";
 import { FormInput } from "../common/FormInput";
-import { EMPLOYEES, THEME_COLORS, PRODUCT_PRICES } from "./constants";
+import { THEME_COLORS, PRODUCT_PRICES } from "./constants";
 
 export function OrderFormModal({
   isOpen,
@@ -20,6 +20,7 @@ export function OrderFormModal({
   products = [],
   categories = [],
   getProductsByCategory = () => [],
+  employees = [],
 }) {
   const isSalesOrder = activeTab === "sales";
   const form = ordersForm;
@@ -245,14 +246,14 @@ export function OrderFormModal({
                   type="select"
                   options={[
                     { value: "", label: "Seleccionar..." },
-                    ...EMPLOYEES.map((e) => ({
-                      value: e,
-                      label: e,
+                    ...employees.map((emp) => ({
+                      value: emp.id.toString(),
+                      label: `${emp.first_name} ${emp.last_name}`,
                     })),
                   ]}
-                  value={form.responsible || ""}
+                  value={form.responsible_employee_id || ""}
                   onChange={(value) =>
-                    onFormChange({ ...form, responsible: value })
+                    onFormChange({ ...form, responsible_employee_id: value })
                   }
                   required
                 />

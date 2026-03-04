@@ -69,7 +69,12 @@ export function SalesOrdersTable({
                 <td>
                   <div className="btn-group btn-group-sm">
                     <button
-                      className="btn btn-outline-secondary"
+                      className="btn"
+                      style={{
+                        backgroundColor: "#6c757d",
+                        color: "white",
+                        border: "none",
+                      }}
                       onClick={() => onViewDetails(order)}
                       title="Ver detalles"
                       disabled={loading}
@@ -87,16 +92,26 @@ export function SalesOrdersTable({
                       </button>
                     )}
                     <button
-                      className="btn btn-outline-secondary"
+                      className="btn"
+                      style={{
+                        backgroundColor: "#0d6efd",
+                        color: "white",
+                        border: "none",
+                      }}
                       onClick={() => onEdit(order)}
                       title="Editar"
                       disabled={loading}
                     >
                       <Edit2 size={14} />
                     </button>
-                    {order.status !== "completada" && (
+                    {order.status !== "completada" && order.status !== "cancelada" && (
                       <button
-                        className="btn btn-outline-secondary"
+                        className="btn"
+                        style={{
+                          backgroundColor: "#198754",
+                          color: "white",
+                          border: "none",
+                        }}
                         onClick={() => onUpdateStatus(order.id, "completada")}
                         title="Completar"
                         disabled={loading}
@@ -104,9 +119,14 @@ export function SalesOrdersTable({
                         <CheckCircle size={14} />
                       </button>
                     )}
-                    {order.status !== "cancelada" && (
+                    {order.status !== "cancelada" && order.status !== "completada" && (
                       <button
-                        className="btn btn-outline-secondary"
+                        className="btn"
+                        style={{
+                          backgroundColor: "#dc3545",
+                          color: "white",
+                          border: "none",
+                        }}
                         onClick={() => onUpdateStatus(order.id, "cancelada")}
                         title="Cancelar"
                         disabled={loading}

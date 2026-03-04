@@ -3,7 +3,6 @@ import {
   verifyToken,
   checkRole,
 } from "../middleware/permissions.middleware.js";
-import upload from "../multerConfig.js";
 
 export default function productsRoutes(pool) {
   const router = express.Router();
@@ -79,12 +78,11 @@ export default function productsRoutes(pool) {
     }
   });
 
-  // Create product with image - Requiere permisos de admin
+  // Create product - Requiere permisos de admin
   router.post(
     "/",
     verifyToken,
     checkRoleWithPool(["Administrador General"]),
-    upload.single("image"),
     async (req, res) => {
       try {
         const {
@@ -127,7 +125,7 @@ export default function productsRoutes(pool) {
           });
         }
 
-        const imageUrl = req.file ? `/images/${req.file.filename}` : null;
+        const imageUrl = null;
 
         const [result] = await pool.query(
           "INSERT INTO products (name, sku, description, category, price, stock_quantity, min_stock_level, image_url, expiry_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
@@ -178,7 +176,6 @@ export default function productsRoutes(pool) {
     "/:id",
     verifyToken,
     checkRoleWithPool(["Administrador General"]),
-    upload.single("image"),
     async (req, res) => {
       try {
         const { id } = req.params;
@@ -205,10 +202,9 @@ export default function productsRoutes(pool) {
           expiry_date || null,
         ];
 
-        // Agregar description solo si se proporciona
         if (description !== undefined && description !== null) {
           query =
-            "UPDATE products SET name=?, sku=?, description=?, category=?, price=?, stock_quantity=?, min_stock_level=?, expiry_date=?, updated_at=NOW()";
+            "UPDATE products SET name=?, sku=?, description=?, category=?, price=?, stock_quantity=?, min_stock_level=?, image_url=NULL, expiry_date=?, updated_at=NOW()";
           params = [
             name,
             sku,
@@ -219,11 +215,9 @@ export default function productsRoutes(pool) {
             min_stock_level,
             expiry_date || null,
           ];
-        }
-
-        if (req.file) {
-          query += ", image_url=?";
-          params.push(`/images/${req.file.filename}`);
+        } else {
+          query =
+            "UPDATE products SET name=?, sku=?, category=?, price=?, stock_quantity=?, min_stock_level=?, image_url=NULL, expiry_date=?, updated_at=NOW()";
         }
 
         query += " WHERE id=?";

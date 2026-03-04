@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 const FINISHED_PRODUCTS_CATEGORIES = [
-  "Panes",
+  "Panadería",
   "Pastelería",
   "Tortas",
   "Donas",
@@ -210,22 +210,7 @@ export function ProductsSection({
                         }}
                       >
                         <td>
-                          <div className="d-flex align-items-center">
-                            {item.image_url && (
-                              <img
-                                src={`http://localhost:5000${item.image_url}`}
-                                alt={item.name}
-                                style={{
-                                  width: "40px",
-                                  height: "40px",
-                                  objectFit: "cover",
-                                  marginRight: "10px",
-                                  borderRadius: "4px",
-                                }}
-                              />
-                            )}
-                            <strong>{item.name}</strong>
-                          </div>
+                          <strong>{item.name}</strong>
                         </td>
                         <td>
                           <code>{item.sku}</code>
@@ -301,14 +286,6 @@ export function ProductsSection({
                       filter: isActive ? "none" : "grayscale(30%)",
                     }}
                   >
-                    {item.image_url && (
-                      <img
-                        src={`http://localhost:5000${item.image_url}`}
-                        alt={item.name}
-                        className="card-img-top"
-                        style={{ height: "200px", objectFit: "cover" }}
-                      />
-                    )}
                     <div className="card-body">
                       <h5 className="card-title">{item.name}</h5>
                       <p className="card-text text-muted small">{item.sku}</p>

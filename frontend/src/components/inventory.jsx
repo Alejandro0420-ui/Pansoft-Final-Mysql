@@ -18,6 +18,8 @@ export function Inventory() {
   const [clearingHistory, setClearingHistory] = useState(false);
   const [activeTab, setActiveTab] = useState("products");
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [stockFilter, setStockFilter] = useState("");
   const [showMovementModal, setShowMovementModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -419,11 +421,26 @@ export function Inventory() {
   const data = activeTab === "supplies" ? supplies : inventory;
   const currentMovements =
     activeTab === "supplies" ? supplyMovements : movements;
-  const filteredData = data.filter(
-    (item) =>
+  
+  const filteredData = data.filter((item) => {
+    // Filtro por búsqueda de nombre o código
+    const matchesSearch =
       item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.code.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+      item.code.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    // Filtro por categoría
+    const matchesCategory = !selectedCategory || item.category === selectedCategory;
+    
+    // Filtro por stock
+    let matchesStock = true;
+    if (stockFilter === "bajo") {
+      matchesStock = item.stock < item.min && item.stock > 0;
+    } else if (stockFilter === "critico") {
+      matchesStock = item.stock === 0;
+    }
+    
+    return matchesSearch && matchesCategory && matchesStock;
+  });
 
   if (loading) {
     return (
@@ -465,6 +482,8 @@ export function Inventory() {
             onClick={() => {
               setActiveTab("products");
               setSearchTerm("");
+              setSelectedCategory("");
+              setStockFilter("");
             }}
           >
             <Package size={18} className="me-2" />
@@ -483,6 +502,8 @@ export function Inventory() {
             onClick={() => {
               setActiveTab("supplies");
               setSearchTerm("");
+              setSelectedCategory("");
+              setStockFilter("");
             }}
           >
             <Wheat size={18} className="me-2" />
@@ -494,10 +515,10 @@ export function Inventory() {
       {/* Stats */}
       <InventoryStats data={data} type={activeTab} />
 
-      {/* Search & Button */}
+      {/* Search & Filters */}
       <div className="card p-3 mb-4">
-        <div className="row g-3">
-          <div className="col-md-9">
+        <div className="row g-3 mb-3">
+          <div className="col-md-5">
             <div className="input-group">
               <span
                 className="input-group-text"
@@ -515,6 +536,36 @@ export function Inventory() {
               />
             </div>
           </div>
+          <div className="col-md-2">
+            <select
+              className="form-select"
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              style={{ borderColor: "#EBB583" }}
+            >
+              <option value="">Todas las categorías</option>
+              {[...new Set(data.map((item) => item.category))]
+                .filter((cat) => cat)
+                .sort()
+                .map((category) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                ))}
+            </select>
+          </div>
+          <div className="col-md-2">
+            <select
+              className="form-select"
+              value={stockFilter}
+              onChange={(e) => setStockFilter(e.target.value)}
+              style={{ borderColor: "#EBB583" }}
+            >
+              <option value="">Todo el stock</option>
+              <option value="bajo">Stock Bajo</option>
+              <option value="critico">Stock Crítico</option>
+            </select>
+          </div>
           <div className="col-md-3 text-end">
             <button
               className="btn text-white"
@@ -526,6 +577,15 @@ export function Inventory() {
             </button>
           </div>
         </div>
+        {(selectedCategory || stockFilter) && (
+          <div className="row">
+            <div className="col-12">
+              <small className="text-muted">
+                {filteredData.length} resultado(s) encontrado(s)
+              </small>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Table */}

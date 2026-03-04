@@ -5,6 +5,8 @@ export function SalesOrdersTab({
   searchTerm,
   onSearchChange,
   onAddOrder,
+  onEditOrder,
+  onViewDetails,
   onStatusChange,
   getStatusLabel,
   getStatusBadgeClass,
@@ -116,26 +118,60 @@ export function SalesOrdersTab({
                     </td>
                     <td>
                       <div className="btn-group btn-group-sm" role="group">
-                        {order.status !== "completada" && (
+                        <button
+                          className="btn"
+                          style={{
+                            backgroundColor: "#6c757d",
+                            color: "white",
+                            border: "none",
+                          }}
+                          onClick={() => onViewDetails(order)}
+                          title="Ver detalles"
+                        >
+                          Ver
+                        </button>
+                        <button
+                          className="btn"
+                          style={{
+                            backgroundColor: "#0d6efd",
+                            color: "white",
+                            border: "none",
+                          }}
+                          onClick={() => onEditOrder(order)}
+                          title="Editar"
+                        >
+                          Editar
+                        </button>
+                        {order.status !== "completada" && order.status !== "cancelada" && (
                           <button
-                            className="btn btn-outline-success"
+                            className="btn"
+                            style={{
+                              backgroundColor: "#198754",
+                              color: "white",
+                              border: "none",
+                            }}
                             onClick={() =>
                               onStatusChange(order.id, "completada")
                             }
                             title="Completar"
                           >
-                            ✓
+                            ✓ Completar
                           </button>
                         )}
-                        {order.status !== "cancelada" && (
+                        {order.status !== "cancelada" && order.status !== "completada" && (
                           <button
-                            className="btn btn-outline-danger"
+                            className="btn"
+                            style={{
+                              backgroundColor: "#dc3545",
+                              color: "white",
+                              border: "none",
+                            }}
                             onClick={() =>
                               onStatusChange(order.id, "cancelada")
                             }
                             title="Cancelar"
                           >
-                            ✕
+                            ✕ Cancelar
                           </button>
                         )}
                       </div>
