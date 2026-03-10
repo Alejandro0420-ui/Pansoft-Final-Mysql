@@ -17,14 +17,14 @@ export const useOrdersLogic = () => {
   const loadOrders = async () => {
     try {
       setLoading(true);
-      console.log("📥 Cargando órdenes...");
+      console.log(" Cargando órdenes...");
 
       const [salesData, prodData] = await Promise.all([
         salesOrdersAPI.getAll(),
         productionOrdersAPI.getAll(),
       ]);
 
-      console.log("✓ Órdenes cargadas:", {
+      console.log(" Órdenes cargadas:", {
         sales: salesData.data?.length || 0,
         production: prodData.data?.length || 0,
       });
@@ -59,9 +59,8 @@ export const useOrdersLogic = () => {
       setSalesOrders(salesOrdered);
       setProductionOrders(prodOrdered);
       setNeedRefresh(false);
-      toast.success("Órdenes cargadas correctamente");
     } catch (error) {
-      console.error("❌ Error cargando órdenes:", error);
+      console.error(" Error cargando órdenes:", error);
 
       let errorMessage = "Error al cargar órdenes";
       if (error.response?.status === 500) {

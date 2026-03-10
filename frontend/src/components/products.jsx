@@ -58,17 +58,17 @@ export function Products() {
       ]);
       console.log("✅ Productos recibidos:", productsRes);
       console.log("✅ Insumos recibidos:", suppliesRes);
-      
+
       // Ordenar productos: habilitados primero, deshabilitados al final
       const sortedProducts = (productsRes.data || productsRes || []).sort(
-        (a, b) => (b.is_active || 0) - (a.is_active || 0)
+        (a, b) => (b.is_active || 0) - (a.is_active || 0),
       );
-      
+
       // Ordenar insumos: habilitados primero, deshabilitados al final
       const sortedSupplies = (suppliesRes.data || suppliesRes || []).sort(
-        (a, b) => (b.is_active || 0) - (a.is_active || 0)
+        (a, b) => (b.is_active || 0) - (a.is_active || 0),
       );
-      
+
       setProducts(sortedProducts);
       setSupplies(sortedSupplies);
     } catch (error) {
@@ -330,12 +330,26 @@ export function Products() {
       {showModal && (
         <div
           className="modal d-block"
-          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100vh",
+            backgroundColor: "rgba(0,0,0,0.5)",
+            zIndex: 1050,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            margin: 0,
+            padding: 0,
+          }}
           role="dialog"
         >
           <div
             className="modal-dialog modal-dialog-centered modal-lg"
             role="document"
+            style={{ position: "relative", zIndex: 1051 }}
           >
             <div className="modal-content">
               <div className="modal-header border-bottom-0">
@@ -467,7 +481,6 @@ export function Products() {
                       <option value="un">un</option>
                     </select>
                   </div>
-
                 </div>
               </div>
               <div className="modal-footer border-top-0">

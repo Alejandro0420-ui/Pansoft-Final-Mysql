@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation, Routes, Route } from "react-router-dom";
+import { Toaster, toast } from "sonner";
 import { Login } from "./components/login";
+import { ChangePasswordModal } from "./components/ChangePasswordModal";
 import { Dashboard } from "./components/dashboard";
 import { Inventory } from "./components/inventory";
 import { Products } from "./components/products";
@@ -40,8 +42,22 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
+  const [userIdForPassword, setUserIdForPassword] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Verificar si el usuario debe cambiar contraseña
+  useEffect(() => {
+    if (isLoggedIn) {
+      const mustChangePassword = localStorage.getItem("mustChangePassword");
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      if (mustChangePassword === "true" && user.id) {
+        setUserIdForPassword(user.id);
+        setShowChangePasswordModal(true);
+      }
+    }
+  }, [isLoggedIn]);
 
   // Detectar cambios de tamaño de pantalla
   useEffect(() => {
@@ -160,22 +176,43 @@ function App() {
   ];
 
   // Cuando está logueado, envolver con PermissionsProvider
+  const handleChangePassword = async (newPassword) => {
+    try {
+      const { authAPI } = await import("./services/api");
+      await authAPI.changePassword(userIdForPassword, newPassword);
+      localStorage.setItem("mustChangePassword", "false");
+      setShowChangePasswordModal(false);
+      toast.success("Contraseña actualizada correctamente");
+    } catch (error) {
+      toast.error(error.message || "Error al cambiar contraseña");
+    }
+  };
+
   return (
-    <PermissionsProvider>
-      <AppContent
-        sidebarOpen={sidebarOpen}
-        setSidebarOpen={setSidebarOpen}
-        isMobile={isMobile}
-        setIsMobile={setIsMobile}
-        unreadCount={unreadCount}
-        setUnreadCount={setUnreadCount}
-        navigate={navigate}
-        location={location}
-        setIsLoggedIn={setIsLoggedIn}
-        currentPage={currentPage}
-        menuItems={menuItems}
-      />
-    </PermissionsProvider>
+    <>
+      {showChangePasswordModal && (
+        <ChangePasswordModal
+          onSubmit={handleChangePassword}
+          isRequired={true}
+        />
+      )}
+      <PermissionsProvider>
+        <Toaster position="top-right" richColors />
+        <AppContent
+          sidebarOpen={sidebarOpen}
+          setSidebarOpen={setSidebarOpen}
+          isMobile={isMobile}
+          setIsMobile={setIsMobile}
+          unreadCount={unreadCount}
+          setUnreadCount={setUnreadCount}
+          navigate={navigate}
+          location={location}
+          setIsLoggedIn={setIsLoggedIn}
+          currentPage={currentPage}
+          menuItems={menuItems}
+        />
+      </PermissionsProvider>
+    </>
   );
 }
 
@@ -221,7 +258,14 @@ function AppContent({
     return (
       <div
         className="d-flex align-items-center justify-content-center"
-        style={{ minHeight: "100vh", backgroundColor: "#f8f9fa" }}
+        style={{
+          height: "100vh",
+          width: "100%",
+          backgroundColor: "#f8f9fa",
+          margin: 0,
+          padding: 0,
+          boxSizing: "border-box",
+        }}
       >
         <div className="text-center">
           <div className="spinner-border text-primary mb-3" role="status">
@@ -236,7 +280,15 @@ function AppContent({
   return (
     <div
       className="d-flex"
-      style={{ minHeight: "100vh", backgroundColor: "#f8f9fa" }}
+      style={{
+        height: "100vh",
+        width: "100%",
+        backgroundColor: "#f8f9fa",
+        margin: 0,
+        padding: 0,
+        boxSizing: "border-box",
+        overflow: "hidden",
+      }}
     >
       {/* Sidebar */}
       <aside
@@ -306,7 +358,7 @@ function AppContent({
       {/* Main Content */}
       <div
         className="flex-grow-1 d-flex flex-column"
-        style={{ height: "100vh", maxHeight: "100vh", boxSizing: "border-box" }}
+        style={{ height: "100%", boxSizing: "border-box" }}
       >
         {/* Header */}
         <header

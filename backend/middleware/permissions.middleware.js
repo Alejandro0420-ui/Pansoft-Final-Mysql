@@ -133,7 +133,7 @@ export const getUserPermissions = async (pool, userId) => {
 // ============================================
 // HELPER: Filtrar por Rol (agrega permisos a req)
 // ============================================
-export const attachUserPermsissions = (pool) => {
+export const attachUserPermissions = (pool) => {
   return async (req, res, next) => {
     try {
       const [userRole] = await pool.query(
@@ -182,14 +182,15 @@ export const hasPermission = (userPermissions, module, action) => {
   if (!userPermissions[module]) return false;
 
   return userPermissions[module].some(
-    (perm) => perm.action === "read" || perm.action === action,
+    (perm) =>
+      perm.action === "*" || perm.action === "read" || perm.action === action,
   );
 };
 
 // ============================================
 // HELPER: Verificar si es administrador
 // ============================================
-export const isAdmin = async (userId) => {
+export const isAdmin = async (pool, userId) => {
   try {
     const connection = await pool.getConnection();
 
@@ -211,16 +212,16 @@ export const isAdmin = async (userId) => {
 // ============================================
 // MIDDLEWARE DE CADENA
 // ============================================
-export const requireAuth = [verifyToken, attachUserPermsissions];
+export const requireAuth = (pool) => [verifyToken, attachUserPermissions(pool)];
 
-export const requireAuthAndRole = (roles) => [
+export const requireAuthAndRole = (pool) => (roles) => [
   verifyToken,
-  checkRole(roles),
-  attachUserPermsissions,
+  checkRole(pool)(roles),
+  attachUserPermissions(pool),
 ];
 
-export const requireAuthAndPermission = (permission) => [
+export const requireAuthAndPermission = (pool) => (permission) => [
   verifyToken,
-  checkPermission(permission),
-  attachUserPermsissions,
+  checkPermission(pool)(permission),
+  attachUserPermissions(pool),
 ];

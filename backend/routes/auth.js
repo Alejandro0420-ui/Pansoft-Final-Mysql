@@ -81,6 +81,7 @@ export default function authRoutes(pool) {
           username: user.username,
           email: user.email,
           roleId: user.role_id,
+          mustChangePassword: user.must_change_password || false,
         },
       });
     } catch (error) {
@@ -246,6 +247,44 @@ export default function authRoutes(pool) {
     } catch (error) {
       console.error("Error al obtener permisos:", error);
       res.status(500).json({ error: "Error al obtener permisos" });
+    }
+  });
+
+  // CAMBIAR CONTRASEÑA DEL USUARIO
+  router.post("/change-password", async (req, res) => {
+    try {
+      const { userId, newPassword } = req.body;
+
+      // Validar datos requeridos
+      if (!userId || !newPassword) {
+        return res
+          .status(400)
+          .json({ error: "Usuario y nueva contraseña requeridos" });
+      }
+
+      if (newPassword.length < 6) {
+        return res
+          .status(400)
+          .json({ error: "Contraseña debe tener al menos 6 caracteres" });
+      }
+
+      // Hash de la nueva contraseña
+      const saltRounds = 10;
+      const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+      // Actualizar contraseña y establecer must_change_password a FALSE
+      await pool.query(
+        "UPDATE users SET password = ?, must_change_password = FALSE WHERE id = ?",
+        [hashedPassword, userId],
+      );
+
+      res.json({
+        success: true,
+        message: "Contraseña actualizada correctamente",
+      });
+    } catch (error) {
+      console.error("Error al cambiar contraseña:", error);
+      res.status(500).json({ error: "Error al cambiar contraseña" });
     }
   });
 
