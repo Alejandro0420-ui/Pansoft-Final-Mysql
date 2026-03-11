@@ -19,7 +19,7 @@ tr.disabled {
 /* Fix for header z-index to prevent overlap */
 header {
   position: relative;
-  z-index: 100;
+  z-index: 0;
   flex-shrink: 0 !important;
   min-height: 70px !important;
 }
@@ -73,12 +73,13 @@ html {
   margin: 0;
   padding: 0;
   overflow-x: hidden;
-  overflow-y: auto;
+  overflow-y: hidden;
   scroll-behavior: smooth;
 }
 
 body {
   width: 100%;
+  height: 100%;
   margin: 0;
   padding: 0;
   font-family:
@@ -90,7 +91,16 @@ body {
   background-color: var(--bg-color);
   color: var(--text-color);
   overflow-x: hidden;
-  overflow-y: auto;
+  overflow-y: hidden;
+}
+
+#root {
+  width: 100%;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 body.modal-open {
@@ -285,30 +295,31 @@ h6 {
   left: 0 !important;
   right: 0 !important;
   bottom: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  z-index: 1050 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 9999 !important;
   padding: 0 !important;
   margin: 0 !important;
   display: flex !important;
-  align-items: center !important;
+  align-items: flex-start !important;
   justify-content: center !important;
   background-color: rgba(0, 0, 0, 0.5) !important;
   overflow: hidden !important;
   box-sizing: border-box !important;
   border: none !important;
   outline: none !important;
+  padding-top: 24px !important;
 }
 
 .modal-dialog,
 div.modal-dialog {
   position: relative !important;
-  z-index: 1051 !important;
-  margin: 0 !important;
+  z-index: 10000 !important;
+  margin: 24px auto !important;
   padding: 0 !important;
   width: auto !important;
   max-width: 500px !important;
-  max-height: auto !important;
+  max-height: calc(100vh - 40px) !important;
   height: auto !important;
   background: white !important;
   border-radius: 0.75rem !important;
@@ -316,6 +327,7 @@ div.modal-dialog {
   display: flex !important;
   flex-direction: column !important;
   border: none !important;
+  overflow: hidden !important;
 }
 
 .modal-dialog.modal-lg {
@@ -349,14 +361,16 @@ div.modal-dialog {
   border-radius: 0.75rem !important;
   box-shadow: none !important;
   position: relative !important;
-  z-index: 1051 !important;
+  z-index: 10000 !important;
   margin: 0 !important;
   padding: 0 !important;
   width: 100% !important;
   height: auto !important;
+  max-height: calc(100vh - 40px) !important;
   display: flex !important;
   flex-direction: column !important;
   background: white !important;
+  overflow: hidden !important;
 }
 
 .modal-header {
@@ -366,13 +380,13 @@ div.modal-dialog {
   margin: 0 !important;
   background-color: transparent !important;
   position: relative !important;
-  z-index: 1052 !important;
+  z-index: 10001 !important;
   flex-shrink: 0 !important;
 }
 
 .modal-title {
   position: relative !important;
-  z-index: 1052 !important;
+  z-index: 10001 !important;
   font-weight: 600 !important;
   font-size: 1.25rem !important;
   margin: 0 !important;
@@ -382,7 +396,9 @@ div.modal-dialog {
 .modal-body {
   padding: 1rem !important;
   margin: 0 !important;
-  flex: none !important;
+  flex: 1 !important;
+  min-height: 0 !important;
+  max-height: calc(100vh - 200px) !important;
   overflow-y: auto !important;
   overflow-x: hidden !important;
   display: block !important;
@@ -486,7 +502,7 @@ div.modal-dialog {
   header {
     position: sticky;
     top: 0;
-    z-index: 100;
+    z-index: 0;
   }
 
   /* Table responsive */

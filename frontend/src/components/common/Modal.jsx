@@ -6,8 +6,7 @@ export const Modal = ({
   title,
   children,
   footer,
-  size = "lg",
-  centered = true,
+  size = "lg", 
   backdrop = true,
 }) => {
   useEffect(() => {

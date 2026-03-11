@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Plus, Search, Edit2, Trash2, User, Loader } from "lucide-react";
 import { toast } from "sonner";
 import { employeesAPI } from "../services/api";
+import { CredentialsModal } from "./CredentialsModal";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 const POSITIONS = [
@@ -27,6 +28,12 @@ export function Employees() {
   const [showInactive, setShowInactive] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState(null);
+  const [showCredentialsModal, setShowCredentialsModal] = useState(false);
+  const [credentialsData, setCredentialsData] = useState({
+    firstName: "",
+    username: "",
+    password: "",
+  });
   const [formData, setFormData] = useState({
     first_name: "",
     last_name: "",
@@ -99,10 +106,10 @@ export function Employees() {
   const openEditModal = (emp) => {
     setEditingEmployee(emp);
     setFormData({
-      first_name: emp.first_name,
-      last_name: emp.last_name,
-      email: emp.email,
-      phone: emp.phone,
+      first_name: emp.first_name || "",
+      last_name: emp.last_name || "",
+      email: emp.email || "",
+      phone: emp.phone || "",
       position: emp.position || "",
       hire_date: emp.hire_date || "",
       password: "",
@@ -122,6 +129,17 @@ export function Employees() {
       return;
     }
 
+    // Validar contraseña si es nuevo empleado
+    if (!editingEmployee && !formData.password) {
+      toast.error("La contraseña inicial es requerida");
+      return;
+    }
+
+    if (!editingEmployee && formData.password.length < 6) {
+      toast.error("La contraseña debe tener al menos 6 caracteres");
+      return;
+    }
+
     try {
       if (editingEmployee) {
         // Actualizar - INCLUIR el status actual
@@ -135,7 +153,9 @@ export function Employees() {
           status: editingEmployee.status || "active", // Mantener status actual
         };
         await employeesAPI.update(editingEmployee.id, updateData);
-        toast.success("Empleado actualizado");
+        toast.success(
+          ` ${formData.first_name} ${formData.last_name} actualizado correctamente`,
+        );
       } else {
         // Crear
         const createData = {
@@ -145,17 +165,31 @@ export function Employees() {
           phone: formData.phone,
           position: formData.position,
           hire_date: formData.hire_date,
+          password: formData.password,
         };
-        await employeesAPI.create(createData);
-        toast.success("Empleado creado exitosamente");
+        const response = await employeesAPI.create(createData);
+        toast.success(
+          ` ${formData.first_name} ${formData.last_name} creado correctamente`,
+        );
+        // Mostrar credenciales en modal con el username retornado del API
+        setCredentialsData({
+          firstName: formData.first_name,
+          username: response.data.username,
+          password: formData.password,
+        });
+        setShowCredentialsModal(true);
+        return; // No continuar con el flujo normal
       }
 
+      // Solo para actualización
       await loadEmployees();
       resetForm();
       setShowModal(false);
     } catch (error) {
       console.error("Error al guardar:", error);
-      toast.error("Error al guardar el empleado");
+      const errorMessage =
+        error.response?.data?.error || "Error al guardar el empleado";
+      toast.error(errorMessage);
     }
   };
 
@@ -240,6 +274,21 @@ export function Employees() {
 
   return (
     <div className="p-4">
+      {/* Credentials Modal */}
+      {showCredentialsModal && (
+        <CredentialsModal
+          firstName={credentialsData.firstName}
+          username={credentialsData.username}
+          initialPassword={credentialsData.password}
+          onClose={() => {
+            setShowCredentialsModal(false);
+            setShowModal(false);
+            resetForm();
+            loadEmployees();
+          }}
+        />
+      )}
+
       {/* Header */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
@@ -396,15 +445,9 @@ export function Employees() {
                         </button>
                         <button
                           onClick={() => toggleStatus(emp.id, emp.status)}
-                          className={`btn btn-sm me-2 ${emp.status === "active" ? "btn-outline-danger" : "btn-outline-success"}`}
+                          className={`btn btn-sm ${emp.status === "active" ? "btn-outline-danger" : "btn-outline-success"}`}
                         >
                           {emp.status === "active" ? "Desactivar" : "Activar"}
-                        </button>
-                        <button
-                          onClick={() => handleDelete(emp.id)}
-                          className="btn btn-sm btn-outline-danger"
-                        >
-                          <Trash2 size={16} />
                         </button>
                       </td>
                     </tr>
@@ -437,7 +480,7 @@ export function Employees() {
           role="dialog"
         >
           <div
-            className="modal-dialog modal-dialog-centered modal-lg"
+            className="modal-dialog  modal-lg"
             role="document"
             style={{ position: "relative", zIndex: 1051 }}
           >
@@ -535,13 +578,15 @@ export function Employees() {
                       <input
                         type="password"
                         className="form-control"
+                        placeholder="Contraseña que usará el empleado para ingresar"
                         value={formData.password}
                         onChange={(e) =>
                           setFormData({ ...formData, password: e.target.value })
                         }
                       />
                       <small className="text-muted">
-                        El empleado deberá cambiarla en su primer acceso
+                        Mínimo 6 caracteres. El empleado deberá cambiarla en su
+                        primer acceso.
                       </small>
                     </div>
                   )}

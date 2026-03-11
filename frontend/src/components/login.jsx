@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { authAPI } from "../services/api";
 import { User, Lock } from "lucide-react";
+import { ForgotPasswordModal } from "./ForgotPasswordModal";
 import "../styles/Login.css";
 import logo from "../images/Logo-Pansoft.png";
 
@@ -9,6 +10,7 @@ export function Login({ onLogin }) {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -17,8 +19,13 @@ export function Login({ onLogin }) {
 
     try {
       const response = await authAPI.login(username, password);
+      console.log("Respuesta del login:", response);
       localStorage.setItem("token", response.data.token);
       localStorage.setItem("user", JSON.stringify(response.data.user));
+      localStorage.setItem(
+        "mustChangePassword",
+        response.data.user.mustChangePassword ? "true" : "false",
+      );
 
       // Cargar permisos del usuario (esto será hecho por PermissionsProvider)
       // Solo almacenamos el token, PermissionsProvider cargará los permisos desde el endpoint
@@ -39,9 +46,14 @@ export function Login({ onLogin }) {
 
   return (
     <div
-      className="min-vh-100 d-flex align-items-center justify-content-center p-2"
+      className="d-flex align-items-center justify-content-center p-2"
       style={{
+        height: "100vh",
+        width: "100%",
         background: "linear-gradient(135deg, #EBB583 0%, #EBCC83 100%)",
+        margin: 0,
+        padding: "1rem !important",
+        boxSizing: "border-box",
       }}
     >
       <div
@@ -50,7 +62,10 @@ export function Login({ onLogin }) {
       >
         <div className="card-body p-3 p-sm-4 p-md-5">
           <div className="text-center mb-4">
-            <div className="d-flex justify-content-center mb-3">
+            <div
+              className="d-flex justify-content-center"
+              style={{ marginBottom: "-10px" }}
+            >
               <img
                 src={logo}
                 id="pansoft-logo"
@@ -60,7 +75,11 @@ export function Login({ onLogin }) {
             </div>
             <p
               className="text-muted small text-center"
-              style={{ fontFamily: "Roboto, sans-serif" }}
+              style={{
+                fontFamily: "Roboto, sans-serif",
+                position: "relative",
+                top: "-20px",
+              }}
             >
               Sistema de Gestión para Panaderías
             </p>
@@ -109,17 +128,22 @@ export function Login({ onLogin }) {
             </div>
 
             <div className="d-flex justify-content-between align-items-center mb-3">
-              <a
-                href="#"
+              <button
+                type="button"
+                onClick={() => setShowForgotPassword(true)}
                 style={{
                   color: "#EA7028",
                   textDecoration: "none",
                   fontFamily: "Roboto, sans-serif",
                   fontSize: "0.9rem",
+                  border: "none",
+                  background: "none",
+                  cursor: "pointer",
+                  padding: 0,
                 }}
               >
                 ¿Olvidó su contraseña?
-              </a>
+              </button>
             </div>
 
             <button
@@ -146,6 +170,11 @@ export function Login({ onLogin }) {
           </div>
         </div>
       </div>
+
+      <ForgotPasswordModal
+        isOpen={showForgotPassword}
+        onClose={() => setShowForgotPassword(false)}
+      />
     </div>
   );
 }

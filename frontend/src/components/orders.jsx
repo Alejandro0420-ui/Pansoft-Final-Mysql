@@ -96,7 +96,7 @@ export function Orders() {
         const response = await employeesAPI.getAll();
         // Filtrar solo empleados activos
         const activeEmployees = (response.data || []).filter(
-          (emp) => emp.status === "active"
+          (emp) => emp.status === "active",
         );
         setEmployees(activeEmployees);
       } catch (error) {
@@ -144,7 +144,7 @@ export function Orders() {
 
     const unitPrice = selectedProduct.price || 0;
     const quantity = parseInt(newSalesItem.quantity);
-    
+
     // Verificar si el producto ya existe en la lista
     const existingItemIndex = salesItems.findIndex(
       (item) => item.product === newSalesItem.product,
@@ -156,7 +156,8 @@ export function Orders() {
       updatedItems[existingItemIndex] = {
         ...updatedItems[existingItemIndex],
         quantity: updatedItems[existingItemIndex].quantity + quantity,
-        total: (updatedItems[existingItemIndex].quantity + quantity) * unitPrice,
+        total:
+          (updatedItems[existingItemIndex].quantity + quantity) * unitPrice,
       };
       setSalesItems(updatedItems);
       toast.success("Cantidad actualizada");
@@ -173,7 +174,7 @@ export function Orders() {
       ]);
       toast.success("Producto agregado");
     }
-    
+
     setNewSalesItem({ category: "", product: "", quantity: 1 });
   };
 
@@ -249,7 +250,9 @@ export function Orders() {
         await productionOrdersAPI.update(selectedOrder.id, {
           product_name: productionForm.product,
           quantity: parseInt(productionForm.quantity),
-          responsible_employee_id: parseInt(productionForm.responsible_employee_id),
+          responsible_employee_id: parseInt(
+            productionForm.responsible_employee_id,
+          ),
           status: selectedOrder.status,
           notes: "",
         });
@@ -258,7 +261,9 @@ export function Orders() {
         await productionOrdersAPI.create({
           product_name: productionForm.product,
           quantity: parseInt(productionForm.quantity),
-          responsible_employee_id: parseInt(productionForm.responsible_employee_id),
+          responsible_employee_id: parseInt(
+            productionForm.responsible_employee_id,
+          ),
           status: "pendiente",
           notes: "",
         });
@@ -289,7 +294,7 @@ export function Orders() {
         const mappedItems = items.map((item) => {
           const quantity = parseInt(item.quantity) || 0;
           const unitPrice = parseFloat(item.unit_price) || 0;
-          const total = parseFloat(item.total) || (quantity * unitPrice) || 0;
+          const total = parseFloat(item.total) || quantity * unitPrice || 0;
           return {
             product: item.product_name,
             quantity,
@@ -331,7 +336,11 @@ export function Orders() {
     setSalesForm({ client: "" });
     setSalesItems([]);
     setNewSalesItem({ category: "", product: "", quantity: 1 });
-    setProductionForm({ product: "", quantity: "", responsible_employee_id: "" });
+    setProductionForm({
+      product: "",
+      quantity: "",
+      responsible_employee_id: "",
+    });
     setSupplies([]);
     setIsEditing(false);
     setSelectedOrder(null);

@@ -19,9 +19,9 @@ export function ProductsModal({
   };
 
   return (
-    <div className="modal d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }} onClick={handleBackdropClick}>
-      <div className="modal-dialog modal-lg">
-        <div className="modal-content">
+    <div className="modal width d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)", zIndex: 9999, position: "fixed" }} onClick={handleBackdropClick}>
+      <div className="modal-dialog modal-lg" style={{ zIndex: 10000 }}>
+        <div className="modal-content" style={{ zIndex: 10001 }}>
           <div
             className="modal-header"
             style={{
