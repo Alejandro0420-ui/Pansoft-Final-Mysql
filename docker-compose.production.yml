@@ -3,23 +3,26 @@ version: '3.8'
 services:
   db:
     image: mysql:8.0
+    container_name: pansoft_db
     restart: unless-stopped
     env_file:
       - .env
-    # No host port exposed for MySQL to avoid conflicts; services use internal Docker network
     volumes:
       - db_data:/var/lib/mysql
-    # Healthcheck para verificar que MySQL esté listo
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
-      interval: 5s
-      timeout: 10s
-      retries: 5
-      start_period: 15s
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-pPansoftRoot2026zR7wBv"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - pansoft_net
 
   backend:
     build:
       context: ./backend
+      dockerfile: Dockerfile
+    container_name: pansoft_backend
     restart: unless-stopped
     env_file:
       - .env
@@ -30,32 +33,41 @@ services:
         condition: service_healthy
     volumes:
       - ./backend/uploads:/app/uploads
-    # Setup BD automáticamente y luego inicia la app
-    command: sh -c "chmod +x backend/db/setup_db.sh && ./backend/db/setup_db.sh && npm start"
+    networks:
+      - pansoft_net
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+    container_name: pansoft_frontend
     restart: unless-stopped
     ports:
       - "80:80"
     depends_on:
-      backend:
-        condition: service_started
+      - backend
+    networks:
+      - pansoft_net
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:latest
+    container_name: pansoft_phpmyadmin
     restart: unless-stopped
-    env_file:
-      - .env
     environment:
       PMA_HOST: db
+      PMA_USER: root
+      PMA_PASSWORD: PansoftRoot2026zR7wBv
     ports:
       - "8082:80"
     depends_on:
       db:
         condition: service_healthy
+    networks:
+      - pansoft_net
 
 volumes:
   db_data:
+
+networks:
+  pansoft_net:
+    driver: bridge
