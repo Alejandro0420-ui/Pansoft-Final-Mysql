@@ -77,7 +77,7 @@ export function InvoiceViewModal({ show, onClose, invoice }) {
         overflow: "auto",
       }}
     >
-      <div className="modal-dialog modal-dialog-centered">
+      <div className="modal-dialog ">
         <div className="modal-content border-0 rounded-3">
           <div className="modal-header border-0 pb-2">
             <h5 className="modal-title">{invoice.invoice_number}</h5>

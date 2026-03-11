@@ -493,7 +493,7 @@ export function SalesPoint() {
           onClick={() => setShowInvoice(false)}
         >
           <div
-            className="modal-dialog modal-dialog-centered modal-lg"
+            className="modal-dialog modal-lg"
             role="document"
             onClick={(e) => e.stopPropagation()}
           >

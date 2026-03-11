@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { authAPI } from "../services/api";
 import { User, Lock } from "lucide-react";
+import { ForgotPasswordModal } from "./ForgotPasswordModal";
 import "../styles/Login.css";
 import logo from "../images/Logo-Pansoft.png";
 
@@ -9,6 +10,7 @@ export function Login({ onLogin }) {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -17,6 +19,7 @@ export function Login({ onLogin }) {
 
     try {
       const response = await authAPI.login(username, password);
+      console.log("Respuesta del login:", response);
       localStorage.setItem("token", response.data.token);
       localStorage.setItem("user", JSON.stringify(response.data.user));
       localStorage.setItem(
@@ -125,17 +128,22 @@ export function Login({ onLogin }) {
             </div>
 
             <div className="d-flex justify-content-between align-items-center mb-3">
-              <a
-                href="#"
+              <button
+                type="button"
+                onClick={() => setShowForgotPassword(true)}
                 style={{
                   color: "#EA7028",
                   textDecoration: "none",
                   fontFamily: "Roboto, sans-serif",
                   fontSize: "0.9rem",
+                  border: "none",
+                  background: "none",
+                  cursor: "pointer",
+                  padding: 0,
                 }}
               >
                 ¿Olvidó su contraseña?
-              </a>
+              </button>
             </div>
 
             <button
@@ -162,6 +170,11 @@ export function Login({ onLogin }) {
           </div>
         </div>
       </div>
+
+      <ForgotPasswordModal
+        isOpen={showForgotPassword}
+        onClose={() => setShowForgotPassword(false)}
+      />
     </div>
   );
 }

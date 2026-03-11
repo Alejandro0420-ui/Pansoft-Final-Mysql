@@ -105,6 +105,30 @@ export const authAPI = {
     }
     return api.post("/auth/change-password", { userId, newPassword });
   },
+
+  // ✅ Solicitar recuperación de contraseña
+  forgotPassword: (email) => {
+    if (!email) {
+      return Promise.reject(new Error("Email requerido"));
+    }
+    if (!email.includes("@")) {
+      return Promise.reject(new Error("Email inválido"));
+    }
+    return api.post("/auth/forgot-password", { email });
+  },
+
+  // ✅ Resetear contraseña con token
+  resetPassword: (token, newPassword) => {
+    if (!token || !newPassword) {
+      return Promise.reject(new Error("Token y contraseña requeridos"));
+    }
+    if (newPassword.length < 6) {
+      return Promise.reject(
+        new Error("Contraseña debe tener al menos 6 caracteres"),
+      );
+    }
+    return api.post("/auth/reset-password", { token, newPassword });
+  },
 };
 
 // Dashboard API

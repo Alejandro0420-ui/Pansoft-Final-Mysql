@@ -347,7 +347,7 @@ export function Products() {
           role="dialog"
         >
           <div
-            className="modal-dialog modal-dialog-centered modal-lg"
+            className="modal-dialog modal-lg"
             role="document"
             style={{ position: "relative", zIndex: 1051 }}
           >
