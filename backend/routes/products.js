@@ -190,55 +190,37 @@ export default function productsRoutes(pool) {
           expiry_date,
         } = req.body;
 
-        let query =
-          "UPDATE products SET name=?, sku=?, category=?, price=?, stock_quantity=?, min_stock_level=?, expiry_date=?, updated_at=NOW()";
-        let params = [
-          name,
-          sku,
-          category,
-          price,
-          stock_quantity,
-          min_stock_level,
-          expiry_date || null,
-        ];
-
-        if (description !== undefined && description !== null) {
-          query =
-            "UPDATE products SET name=?, sku=?, description=?, category=?, price=?, stock_quantity=?, min_stock_level=?, image_url=NULL, expiry_date=?, updated_at=NOW()";
-          params = [
-            name,
-            sku,
-            description,
-            category,
-            price,
-            stock_quantity,
-            min_stock_level,
-            expiry_date || null,
-          ];
-        } else {
-          query =
-            "UPDATE products SET name=?, sku=?, category=?, price=?, stock_quantity=?, min_stock_level=?, image_url=NULL, expiry_date=?, updated_at=NOW()";
+        if (!name || !sku || !name.trim() || !sku.trim()) {
+          return res.status(400).json({ error: "Nombre y SKU son requeridos" });
         }
 
-        query += " WHERE id=?";
-        params.push(id);
+        if (!category || !price) {
+          return res.status(400).json({ error: "Categoría y precio son requeridos" });
+        }
 
-        await pool.query(query, params);
+        await pool.query(
+          `UPDATE products
+           SET name=?, sku=?, description=?, category=?, price=?,
+               stock_quantity=?, min_stock_level=?,
+               expiry_date=?, updated_at=NOW()
+           WHERE id=?`,
+          [
+            name.trim(),
+            sku.trim(),
+            description || null,
+            category,
+            parseFloat(price) || 0,
+            parseInt(stock_quantity) || 0,
+            parseInt(min_stock_level) || 0,
+            expiry_date || null,
+            id,
+          ],
+        );
 
-        res.json({
-          id,
-          name,
-          sku,
-          description,
-          category,
-          price,
-          stock_quantity,
-          min_stock_level,
-          expiry_date,
-        });
+        res.json({ success: true, id, name, sku, description, category, price, stock_quantity, min_stock_level, expiry_date });
       } catch (error) {
         console.error("Error al actualizar producto:", error);
-        res.status(500).json({ error: "Error al actualizar producto" });
+        res.status(500).json({ error: "Error al actualizar producto: " + error.message });
       }
     },
   );

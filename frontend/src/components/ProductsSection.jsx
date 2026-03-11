@@ -189,6 +189,7 @@ export function ProductsSection({
                     <th>Categoría</th>
                     <th>Precio</th>
                     <th>Stock</th>
+                    <th>Vencimiento</th>
                     <th>Estado</th>
                     <th>Acciones</th>
                   </tr>
@@ -226,6 +227,14 @@ export function ProductsSection({
                           <span className="badge" style={status.style}>
                             {item.stock_quantity} {item.unit || "un"}
                           </span>
+                        </td>
+                        <td>
+                          {item.expiry_date
+                            ? (() => {
+                                const dateStr = item.expiry_date.split('T')[0];
+                                return new Date(dateStr + 'T12:00:00').toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                              })()
+                            : <span className="text-muted">—</span>}
                         </td>
                         <td>
                           <span
@@ -297,6 +306,15 @@ export function ProductsSection({
                         {Number(item.price).toLocaleString("es-CO", {
                           minimumFractionDigits: 0,
                         })}
+                      </p>
+                      <p className="card-text small mb-2">
+                        <strong>Vencimiento:</strong>{" "}
+                        {item.expiry_date
+                          ? (() => {
+                              const dateStr = item.expiry_date.split('T')[0];
+                              return new Date(dateStr + 'T12:00:00').toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                            })()
+                          : <span className="text-muted">—</span>}
                       </p>
                       <div className="mb-3">
                         <span className="badge" style={status.style}>

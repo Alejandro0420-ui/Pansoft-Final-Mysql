@@ -145,8 +145,21 @@ export function ProductsModal({
                 </div>
               </div>
 
+              <div className="row mb-3">
+                <div className="col-md-6">
+                  <label className="form-label">Fecha de Vencimiento</label>
+                  <input
+                    type="date"
+                    className="form-control"
+                    style={{ borderColor: "#EBB583" }}
+                    value={formData.expiry_date || ""}
+                    onChange={(e) => onFormChange("expiry_date", e.target.value)}
+                  />
+                </div>
+              </div>
+
               <div className="mb-3">
-                <label className="form-label">Descripción</label>
+                <label className="form-label">Descripciónwwww</label>
                 <textarea
                   className="form-control"
                   style={{ borderColor: "#EBB583" }}

@@ -14,6 +14,8 @@ const FINISHED_PRODUCTS_CATEGORIES = [
   "Galletas",
   "Muffins",
   "Salados",
+  "Panes",
+  "Bebidas",
   "Otros",
 ];
 const SUPPLIES_CATEGORIES = [
@@ -98,6 +100,11 @@ export function Products() {
   };
 
   const openEditModal = (item) => {
+    // Convertir expiry_date de "2026-12-31T00:00:00.000Z" a "2026-12-31" para el input date
+    let expiryDateValue = "";
+    if (item.expiry_date) {
+      expiryDateValue = item.expiry_date.split("T")[0];
+    }
     setEditingProduct(item);
     setFormData({
       name: item.name || "",
@@ -108,7 +115,7 @@ export function Products() {
       stock_quantity: item.stock_quantity || "",
       min_stock_level: item.min_stock_level || "",
       unit: item.unit || "kg",
-      expiry_date: item.expiry_date || "",
+      expiry_date: expiryDateValue,
     });
     setShowModal(true);
   };
@@ -120,16 +127,17 @@ export function Products() {
       !formData.name ||
       !formData.sku ||
       !formData.category ||
-      !formData.price
+      !formData.price ||
+      !formData.expiry_date
     ) {
       console.warn(" Campos requeridos faltando", {
         name: formData.name,
         sku: formData.sku,
         category: formData.category,
         price: formData.price,
+        expiry_date: formData.expiry_date,
       });
-      const mensaje = "Complete todos los campos requeridos";
-      alert(mensaje);
+      const mensaje = "Complete todos los campos requeridos (incluyendo fecha de vencimiento)";
       toast.error(mensaje);
       return;
     }
@@ -154,7 +162,6 @@ export function Products() {
       ) {
         const mensaje = `El SKU "${formData.sku}" ya existe en la sistema. Por favor usa uno diferente.`;
         console.warn(mensaje);
-        alert(mensaje);
         toast.error(mensaje);
         setIsLoading(false);
         return;
@@ -170,23 +177,24 @@ export function Products() {
       ) {
         const mensaje = ` El nombre "${formData.name}" ya existe en el sistema. Por favor usa uno diferente.`;
         console.warn(mensaje);
-        alert(mensaje);
         toast.error(mensaje);
         setIsLoading(false);
         return;
       }
 
-      // Crear FormData para enviar archivos
-      const data = new FormData();
-      data.append("name", formData.name);
-      data.append("sku", formData.sku);
-      data.append("description", formData.description || "");
-      data.append("price", formData.price);
-      data.append("category", formData.category);
-      data.append("stock_quantity", formData.stock_quantity || 0);
-      data.append("min_stock_level", formData.min_stock_level || 0);
+      // Enviar JSON plano (el backend usa express.json())
+      const data = {
+        name: formData.name,
+        sku: formData.sku,
+        description: formData.description || "",
+        price: parseFloat(formData.price),
+        category: formData.category,
+        stock_quantity: parseInt(formData.stock_quantity) || 0,
+        min_stock_level: parseInt(formData.min_stock_level) || 0,
+        expiry_date: formData.expiry_date || null,
+      };
       if (activeTab === "insumos") {
-        data.append("unit", formData.unit || "kg");
+        data.unit = formData.unit || "kg";
       }
 
       let response;
@@ -195,14 +203,12 @@ export function Products() {
         response = await api.update(editingProduct.id, data);
         console.log(" Producto actualizado:", response);
         const mensaje = ` ${activeTab === "productos" ? "Producto" : "Insumo"} actualizado exitosamente`;
-        alert(mensaje);
         toast.success(mensaje);
       } else {
         console.log("Creando nuevo producto...");
         response = await api.create(data);
         console.log("Producto creado:", response);
         const mensaje = `${activeTab === "productos" ? "Producto" : "Insumo"} creado exitosamente`;
-        alert(mensaje);
         toast.success(mensaje);
       }
 
@@ -227,7 +233,6 @@ export function Products() {
         "Error al guardar el producto";
 
       console.error("Mensaje de error final:", mensajeError);
-      alert(`Error: ${mensajeError}`);
       toast.error(mensajeError);
     } finally {
       setIsLoading(false);
@@ -463,6 +468,21 @@ export function Products() {
                           min_stock_level: e.target.value,
                         })
                       }
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label">Fecha de Vencimiento *</label>
+                    <input
+                      type="date"
+                      className="form-control"
+                      value={formData.expiry_date || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          expiry_date: e.target.value,
+                        })
+                      }
+                      required
                     />
                   </div>
                   <div className="col-md-6">
