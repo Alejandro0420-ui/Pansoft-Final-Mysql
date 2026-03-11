@@ -104,36 +104,38 @@ export function SalesOrdersTable({
                     >
                       <Edit2 size={14} />
                     </button>
-                    {order.status !== "completada" && order.status !== "cancelada" && (
-                      <button
-                        className="btn"
-                        style={{
-                          backgroundColor: "#198754",
-                          color: "white",
-                          border: "none",
-                        }}
-                        onClick={() => onUpdateStatus(order.id, "completada")}
-                        title="Completar"
-                        disabled={loading}
-                      >
-                        <CheckCircle size={14} />
-                      </button>
-                    )}
-                    {order.status !== "cancelada" && order.status !== "completada" && (
-                      <button
-                        className="btn"
-                        style={{
-                          backgroundColor: "#dc3545",
-                          color: "white",
-                          border: "none",
-                        }}
-                        onClick={() => onUpdateStatus(order.id, "cancelada")}
-                        title="Cancelar"
-                        disabled={loading}
-                      >
-                        <XCircle size={14} />
-                      </button>
-                    )}
+                    {order.status !== "completada" &&
+                      order.status !== "cancelada" && (
+                        <button
+                          className="btn"
+                          style={{
+                            backgroundColor: "#198754",
+                            color: "white",
+                            border: "none",
+                          }}
+                          onClick={() => onUpdateStatus(order.id, "completada")}
+                          title="Completar"
+                          disabled={loading}
+                        >
+                          <CheckCircle size={14} />
+                        </button>
+                      )}
+                    {order.status !== "cancelada" &&
+                      order.status !== "completada" && (
+                        <button
+                          className="btn"
+                          style={{
+                            backgroundColor: "#dc3545",
+                            color: "white",
+                            border: "none",
+                          }}
+                          onClick={() => onUpdateStatus(order.id, "cancelada")}
+                          title="Cancelar"
+                          disabled={loading}
+                        >
+                          <XCircle size={14} />
+                        </button>
+                      )}
                   </div>
                 </td>
               </tr>

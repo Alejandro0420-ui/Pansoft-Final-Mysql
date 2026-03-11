@@ -400,7 +400,10 @@ export default function suppliesRoutes(pool) {
         params.push(id);
 
         if (req.file) {
-          query = query.replace("updated_at=NOW()", "image_url=?, updated_at=NOW()");
+          query = query.replace(
+            "updated_at=NOW()",
+            "image_url=?, updated_at=NOW()",
+          );
           params.splice(params.length - 1, 0, `/images/${req.file.filename}`);
         }
 

@@ -55,9 +55,9 @@ export function ProductsGrid({
                   }}
                 />
               ) : activeTab === "productos" ? (
-                "📦"
+                "Productos"
               ) : (
-                "🏭"
+                "Insumos"
               )}
             </div>
             <div className="card-body">

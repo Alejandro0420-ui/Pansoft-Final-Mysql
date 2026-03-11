@@ -84,8 +84,6 @@ export function Inventory() {
         disabled: false,
       }));
       setSupplies(rawMaterials);
-
-      toast.success("Inventario cargado correctamente");
     } catch (error) {
       console.error("Error loading inventory:", error);
       toast.error("Error al cargar inventario");
@@ -421,16 +419,17 @@ export function Inventory() {
   const data = activeTab === "supplies" ? supplies : inventory;
   const currentMovements =
     activeTab === "supplies" ? supplyMovements : movements;
-  
+
   const filteredData = data.filter((item) => {
     // Filtro por búsqueda de nombre o código
     const matchesSearch =
       item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.code.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     // Filtro por categoría
-    const matchesCategory = !selectedCategory || item.category === selectedCategory;
-    
+    const matchesCategory =
+      !selectedCategory || item.category === selectedCategory;
+
     // Filtro por stock
     let matchesStock = true;
     if (stockFilter === "bajo") {
@@ -438,7 +437,7 @@ export function Inventory() {
     } else if (stockFilter === "critico") {
       matchesStock = item.stock === 0;
     }
-    
+
     return matchesSearch && matchesCategory && matchesStock;
   });
 

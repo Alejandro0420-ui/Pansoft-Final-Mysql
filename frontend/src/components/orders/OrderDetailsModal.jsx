@@ -190,82 +190,82 @@ export function OrderDetailsModal({
                   <tbody>
                     {items.map((item) => (
                       <tr key={item.id}>
-                      {isSalesOrder && (
-                        <td>
-                          {item.product_name || item.soi_product_id || "-"}
-                        </td>
-                      )}
-                      {isSalesOrder && (
-                        <td>
-                          ${item.unit_price?.toLocaleString("es-CO") || "0"}
-                        </td>
-                      )}
-                      <td>
-                        {editingItemId === item.id ? (
-                          <input
-                            type="number"
-                            className="form-control form-control-sm"
-                            value={editingValues.quantity}
-                            onChange={(e) =>
-                              setEditingValues({
-                                ...editingValues,
-                                quantity: e.target.value,
-                              })
-                            }
-                            min="1"
-                          />
-                        ) : (
-                          item.quantity || item.quantity_required || 0
+                        {isSalesOrder && (
+                          <td>
+                            {item.product_name || item.soi_product_id || "-"}
+                          </td>
                         )}
-                      </td>
-                      {isSalesOrder && (
-                        <td>${(item.total || 0).toLocaleString("es-CO")}</td>
-                      )}
-                      <td>
-                        {editingItemId === item.id ? (
-                          <>
-                            <button
-                              className="btn btn-sm btn-success"
-                              onClick={() => saveEdit(item.id)}
-                              disabled={loading}
-                              title="Guardar"
-                            >
-                              <Save size={14} />
-                            </button>
-                            <button
-                              className="btn btn-sm btn-secondary ms-1"
-                              onClick={() => setEditingItemId(null)}
-                              disabled={loading}
-                              title="Cancelar"
-                            >
-                              <X size={14} />
-                            </button>
-                          </>
-                        ) : (
-                          <>
-                            <button
-                              className="btn btn-sm btn-outline-secondary"
-                              onClick={() => startEdit(item)}
-                              disabled={loading}
-                              title="Editar"
-                            >
-                              <Edit2 size={14} />
-                            </button>
-                            <button
-                              className="btn btn-sm btn-outline-danger ms-1"
-                              onClick={() => deleteItem(item.id)}
-                              disabled={loading}
-                              title="Eliminar"
-                            >
-                              <Trash2 size={14} />
-                            </button>
-                          </>
+                        {isSalesOrder && (
+                          <td>
+                            ${item.unit_price?.toLocaleString("es-CO") || "0"}
+                          </td>
                         )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                        <td>
+                          {editingItemId === item.id ? (
+                            <input
+                              type="number"
+                              className="form-control form-control-sm"
+                              value={editingValues.quantity}
+                              onChange={(e) =>
+                                setEditingValues({
+                                  ...editingValues,
+                                  quantity: e.target.value,
+                                })
+                              }
+                              min="1"
+                            />
+                          ) : (
+                            item.quantity || item.quantity_required || 0
+                          )}
+                        </td>
+                        {isSalesOrder && (
+                          <td>${(item.total || 0).toLocaleString("es-CO")}</td>
+                        )}
+                        <td>
+                          {editingItemId === item.id ? (
+                            <>
+                              <button
+                                className="btn btn-sm btn-success"
+                                onClick={() => saveEdit(item.id)}
+                                disabled={loading}
+                                title="Guardar"
+                              >
+                                <Save size={14} />
+                              </button>
+                              <button
+                                className="btn btn-sm btn-secondary ms-1"
+                                onClick={() => setEditingItemId(null)}
+                                disabled={loading}
+                                title="Cancelar"
+                              >
+                                <X size={14} />
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <button
+                                className="btn btn-sm btn-outline-secondary"
+                                onClick={() => startEdit(item)}
+                                disabled={loading}
+                                title="Editar"
+                              >
+                                <Edit2 size={14} />
+                              </button>
+                              <button
+                                className="btn btn-sm btn-outline-danger ms-1"
+                                onClick={() => deleteItem(item.id)}
+                                disabled={loading}
+                                title="Eliminar"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             ) : (
               <p className="text-muted">No hay items en esta orden</p>

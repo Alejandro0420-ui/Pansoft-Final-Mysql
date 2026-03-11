@@ -92,6 +92,19 @@ export const authAPI = {
 
   // ✅ Verificar si está autenticado
   isAuthenticated: () => !!localStorage.getItem("token"),
+
+  // ✅ Cambiar contraseña
+  changePassword: (userId, newPassword) => {
+    if (!userId || !newPassword) {
+      return Promise.reject(new Error("Datos requeridos"));
+    }
+    if (newPassword.length < 6) {
+      return Promise.reject(
+        new Error("Contraseña debe tener al menos 6 caracteres"),
+      );
+    }
+    return api.post("/auth/change-password", { userId, newPassword });
+  },
 };
 
 // Dashboard API
