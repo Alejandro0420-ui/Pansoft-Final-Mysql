@@ -41,7 +41,7 @@ export function InventoryGrid({
                 >
                   {item.image_url ? (
                     <img
-                      src={`http://localhost:5000${item.image_url}`}
+                      src={item.image_url}
                       alt={item.name}
                       style={{
                         width: "100%",

@@ -34,7 +34,7 @@ export const PermissionsProvider = ({ children }) => {
         }
 
         const response = await axios.get(
-          "http://localhost:5000/api/auth/user/permissions",
+          "/api/auth/user/permissions",
           {
             headers: { Authorization: `Bearer ${token}` },
           },
@@ -281,7 +281,7 @@ export const InventoryTable = () => {
 
   const fetchInventory = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/inventory", {
+      const response = await axios.get("/api/inventory", {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       setInventory(response.data);
@@ -329,7 +329,7 @@ export const apiService = {
   async canAccess(module, action = "read") {
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/check-permission",
+        "/api/check-permission",
         { module, action },
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
@@ -343,7 +343,7 @@ export const apiService = {
 
   async getUserRole() {
     try {
-      const response = await axios.get("http://localhost:5000/api/user/role", {
+      const response = await axios.get("/api/user/role", {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       return response.data.role;

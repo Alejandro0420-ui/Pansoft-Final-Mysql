@@ -38,15 +38,18 @@ export function Notifications() {
     try {
       setLoading(true);
       const queryParam = filter === "unread" ? "?unreadOnly=true" : "";
+      const token = localStorage.getItem("token");
       const response = await fetch(
-        `http://localhost:5000/api/notifications${queryParam}`,
+        `/api/notifications${queryParam}`,
+        { headers: { Authorization: `Bearer ${token}` } },
       );
       const data = await response.json();
       setNotifications(data.notifications || []);
 
       // Cargar conteo de no leídas
       const countResponse = await fetch(
-        "http://localhost:5000/api/notifications/unread/count",
+        "/api/notifications/unread/count",
+        { headers: { Authorization: `Bearer ${token}` } },
       );
       const countData = await countResponse.json();
       setUnreadCount(countData.unreadCount || 0);
@@ -68,8 +71,9 @@ export function Notifications() {
   // Marcar como leída
   const markAsRead = async (id) => {
     try {
-      await fetch(`http://localhost:5000/api/notifications/${id}/read`, {
+      await fetch(`/api/notifications/${id}/read`, {
         method: "PATCH",
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       fetchNotifications();
     } catch (error) {
@@ -80,8 +84,9 @@ export function Notifications() {
   // Marcar todas como leídas
   const markAllAsRead = async () => {
     try {
-      await fetch("http://localhost:5000/api/notifications/read/all", {
+      await fetch("/api/notifications/read/all", {
         method: "PATCH",
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       fetchNotifications();
     } catch (error) {
@@ -92,8 +97,9 @@ export function Notifications() {
   // Eliminar notificación
   const deleteNotification = async (id) => {
     try {
-      await fetch(`http://localhost:5000/api/notifications/${id}`, {
+      await fetch(`/api/notifications/${id}`, {
         method: "DELETE",
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       fetchNotifications();
     } catch (error) {
@@ -104,8 +110,9 @@ export function Notifications() {
   // Eliminar todas las leídas
   const deleteAllRead = async () => {
     try {
-      await fetch("http://localhost:5000/api/notifications/read/all", {
+      await fetch("/api/notifications/read/all", {
         method: "DELETE",
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       fetchNotifications();
     } catch (error) {

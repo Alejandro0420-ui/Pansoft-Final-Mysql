@@ -117,7 +117,7 @@ function App() {
     const fetchUnreadCount = async () => {
       try {
         const response = await fetch(
-          "http://localhost:5000/api/notifications/unread/count",
+          "/api/notifications/unread/count",
         );
         const data = await response.json();
         setUnreadCount(data.unreadCount || 0);
