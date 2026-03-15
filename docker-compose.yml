@@ -22,7 +22,10 @@ services:
     depends_on:
       - db
     volumes:
-      - ./backend/uploads:/app/uploads
+      - ./backend:/app             # <-- NUEVO: Sincroniza todo tu código fuente del backend
+      - /app/node_modules          # <-- NUEVO: Protege las dependencias internas (si usas Node.js)
+      # - /app/venv                # <-- (Nota: Usa esta en vez de node_modules si tu backend es Python)
+      - ./backend/uploads:/app/uploads # Mantiene la sincronización de tu carpeta de subidas
 
   frontend:
     build:

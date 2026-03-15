@@ -111,14 +111,23 @@ app.get("/api/health", (req, res) => {
   res.json({ status: "OK", message: "Backend está funcionando" });
 });
 
-// ===== FRONTEND SERVING (PRODUCTION) =====
-// Servir archivos estáticos del frontend compilado
-app.use(express.static(path.join(__dirname, "dist")));
-
-// Redirecccionar todas las rutas al index.html para manejo del routing en frontend
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "dist", "index.html"));
-});
+// ===== FRONTEND SERVING (SOLO EN PRODUCCIÓN) =====
+// En desarrollo, el frontend corre en puerto separado (3000)
+// En producción, se sirve desde la carpeta dist/
+if (process.env.NODE_ENV === "production") {
+  const distPath = path.join(__dirname, "dist");
+  const fs = require("fs");
+  
+  if (fs.existsSync(distPath)) {
+    app.use(express.static(distPath));
+    app.get("*", (req, res) => {
+      res.sendFile(path.join(distPath, "index.html"));
+    });
+    console.log("✓ Frontend estático habilitado (producción)");
+  } else {
+    console.warn("⚠ Carpeta dist/ no encontrada - frontend separado");
+  }
+}
 
 // Función para inicializar la base de datos
 async function initializeDatabase() {

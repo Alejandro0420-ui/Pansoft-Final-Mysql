@@ -35,67 +35,45 @@ export function Dashboard() {
     pending_orders: { total: 0 },
   });
   const [chartData, setChartData] = useState([
-    { name: "Ene", ventas: 4000, compras: 2400 },
-    { name: "Feb", ventas: 3000, compras: 1398 },
-    { name: "Mar", ventas: 2000, compras: 9800 },
-    { name: "Abr", ventas: 2780, compras: 3908 },
-    { name: "May", ventas: 1890, compras: 4800 },
-    { name: "Jun", ventas: 2390, compras: 3800 },
+    { name: "Ene", ventas: 0, compras: 0 },
+    { name: "Feb", ventas: 0, compras: 0 },
+    { name: "Mar", ventas: 0, compras: 0 },
+    { name: "Abr", ventas: 0, compras: 0 },
+    { name: "May", ventas: 0, compras: 0 },
+    { name: "Jun", ventas: 0, compras: 0 },
+    { name: "Jul", ventas: 0, compras: 0 },
+    { name: "Ago", ventas: 0, compras: 0 },
+    { name: "Sep", ventas: 0, compras: 0 },
+    { name: "Oct", ventas: 0, compras: 0 },
+    { name: "Nov", ventas: 0, compras: 0 },
+    { name: "Dic", ventas: 0, compras: 0 },
   ]);
-  const [alerts, setAlerts] = useState([
-    { text: "Stock bajo: Pan Integral (Solo 5 unidades)", type: "warning" },
-    { text: "Factura #1234 vence mañana", type: "danger" },
-    { text: "Nueva orden de compra recibida", type: "info" },
-    { text: "Stock crítico: Tortas de Chocolate", type: "warning" },
-  ]);
-  const [activity, setActivity] = useState([
-    {
-      action: "Factura #5678 generada",
-      time: "Hace 5 min",
-      user: "Juan Pérez",
-    },
-    {
-      action: "Producto agregado al inventario",
-      time: "Hace 15 min",
-      user: "María García",
-    },
-    {
-      action: "Cliente nuevo registrado",
-      time: "Hace 1 hora",
-      user: "Sistema",
-    },
-    {
-      action: "Orden de compra aprobada",
-      time: "Hace 2 horas",
-      user: "Carlos López",
-    },
-  ]);
-
-  const categoryData = [
-    { name: "Panes", value: 400 },
-    { name: "Pastelería", value: 300 },
-    { name: "Tortas", value: 200 },
-    { name: "Galletas", value: 150 },
-    { name: "Otros", value: 100 },
-  ];
+  const [alerts, setAlerts] = useState([]);
+  const [activity, setActivity] = useState([]);
+  const [categoryData, setCategoryData] = useState([]);
 
   useEffect(() => {
     loadDashboardData();
+    // Actualizar datos cada 30 segundos
+    const interval = setInterval(loadDashboardData, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   const loadDashboardData = async () => {
     try {
-      const [statsRes, chartsRes, alertsRes, activityRes] = await Promise.all([
+      const [statsRes, chartsRes, alertsRes, activityRes, categoriesRes] = await Promise.all([
         dashboardAPI.getStats(),
         dashboardAPI.getCharts(),
         dashboardAPI.getAlerts(),
         dashboardAPI.getActivity(),
+        dashboardAPI.getCategories(),
       ]);
 
       setStats(statsRes.data);
-      if (chartsRes.data.length > 0) setChartData(chartsRes.data);
-      if (alertsRes.data.length > 0) setAlerts(alertsRes.data);
-      if (activityRes.data.length > 0) setActivity(activityRes.data);
+      if (chartsRes.data && chartsRes.data.length > 0) setChartData(chartsRes.data);
+      if (alertsRes.data && alertsRes.data.length > 0) setAlerts(alertsRes.data);
+      if (activityRes.data && activityRes.data.length > 0) setActivity(activityRes.data);
+      if (categoriesRes.data && categoriesRes.data.length > 0) setCategoryData(categoriesRes.data);
     } catch (error) {
       console.error("Error cargando dashboard:", error);
     }
@@ -132,12 +110,14 @@ export function Dashboard() {
                   >
                     ${stats.monthly_sales?.total || 0}
                   </h3>
-                  <p
-                    className="text-success small mt-2"
-                    style={{ fontFamily: "Roboto, sans-serif" }}
-                  >
-                    +12.5% vs mes anterior
-                  </p>
+                  {stats.sales_change_percent !== undefined && (
+                    <p
+                      className={`small mt-2 ${stats.sales_change_percent >= 0 ? 'text-success' : 'text-danger'}`}
+                      style={{ fontFamily: "Roboto, sans-serif" }}
+                    >
+                      {stats.sales_change_percent >= 0 ? '+' : ''}{stats.sales_change_percent}% vs mes anterior
+                    </p>
+                  )}
                 </div>
                 <div
                   className="p-3 rounded-3 text-white"

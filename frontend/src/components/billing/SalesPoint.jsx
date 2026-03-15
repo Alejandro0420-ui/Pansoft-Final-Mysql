@@ -142,10 +142,11 @@ export function SalesPoint() {
         toast.success("✅ Venta completada - Inventario actualizado");
         console.log("Productos actualizados:", response.data.updatedProducts);
 
-        // Limpiar carrito y generar nueva factura
+        // Limpiar carrito, cerrar modal, recargar inventario y nueva factura
         setCart([]);
         setShowInvoice(false);
         generateInvoiceNumber();
+        loadProducts(); // Recargar inventario actualizado
         toast.success("Nueva venta iniciada");
       } else {
         toast.error(
@@ -163,12 +164,39 @@ export function SalesPoint() {
     }
   };
 
-  const handleFinalizeSale = () => {
+  const handleFinalizeSale = async () => {
     if (cart.length === 0) {
       toast.error("Añade productos al carrito");
       return;
     }
-    setShowInvoice(true);
+
+    try {
+      // Procesar la venta inmediatamente al hacer clic en "Finalizar venta"
+      const token = localStorage.getItem("token");
+      const response = await axios.post(
+        `${API_URL}/inventory/process-sale`,
+        {
+          cart: cart,
+          invoiceNumber: invoiceNumber,
+          invoiceDate: invoiceDate,
+        },
+        {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        },
+      );
+
+      if (response.data.success) {
+        toast.success("Venta completada - Inventario actualizado");
+        // Abrir modal para mostrarfactura/impresión
+        setShowInvoice(true);
+      } else {
+        toast.error("Error al procesar la venta: " + (response.data.error || "Error desconocido"));
+      }
+    } catch (error) {
+      console.error("Error procesando venta:", error);
+      const errorMsg = error.response?.data?.details || error.response?.data?.error || error.message;
+      toast.error(`Error: ${errorMsg}`);
+    }
   };
 
   const total = calculateTotal();
@@ -610,7 +638,13 @@ export function SalesPoint() {
                 <button
                   type="button"
                   className="btn btn-secondary"
-                  onClick={() => setShowInvoice(false)}
+                  onClick={() => {
+                    setCart([]);
+                    setShowInvoice(false);
+                    generateInvoiceNumber();
+                    loadProducts(); // Recargar inventario
+                    toast.success("Venta cerrada");
+                  }}
                 >
                   Cerrar
                 </button>

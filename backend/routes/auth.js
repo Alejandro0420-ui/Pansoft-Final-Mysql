@@ -30,7 +30,8 @@ const sendResetEmail = async (email, resetToken) => {
     console.error("[EMAIL] Error al verificar transporter SMTP:", verifyError);
   }
 
-  const resetUrl = `${process.env.FRONTEND_URL || "http://localhost:5173"}/reset-password?token=${resetToken}`;
+  const frontendBase = process.env.FRONTEND_URL || "";
+  const resetUrl = frontendBase ? `${frontendBase}/reset-password?token=${resetToken}` : `/reset-password?token=${resetToken}`;
 
   const mailOptions = {
     from: '"Pansoft - Sistema de Gestión" <no-reply@pansoft.com>',

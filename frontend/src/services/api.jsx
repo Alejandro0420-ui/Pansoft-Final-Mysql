@@ -137,6 +137,7 @@ export const dashboardAPI = {
   getCharts: () => api.get("/dashboard/charts"),
   getAlerts: () => api.get("/dashboard/alerts"),
   getActivity: () => api.get("/dashboard/activity"),
+  getCategories: () => api.get("/dashboard/categories"),
 };
 
 // Products API
