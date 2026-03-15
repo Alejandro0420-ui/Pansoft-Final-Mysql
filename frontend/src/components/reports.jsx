@@ -2,6 +2,7 @@ import { useReportsLogic } from "./reports/useReportsLogic";
 import { ReportFilters } from "./reports/ReportFilters";
 import { SummarySection } from "./reports/SummarySection";
 import { SalesChartSection } from "./reports/SalesChartSection";
+import { TodaySalesSection } from "./reports/TodaySalesSection";
 import { SalesOrdersSection } from "./reports/SalesOrdersSection";
 import { ProductionOrdersSection } from "./reports/ProductionOrdersSection";
 import { ProductsSection } from "./reports/ProductsSection";
@@ -64,6 +65,8 @@ export function Reports() {
           <div className="mt-4">
             <SalesChartSection data={reports.sales} />
           </div>
+
+          <TodaySalesSection data={reports.todaySales} />
 
           <SalesOrdersSection data={reports.salesOrders} />
 

@@ -4,6 +4,7 @@ import { reportsAPI } from "../../services/api";
 export function useReportsLogic() {
   const [reports, setReports] = useState({
     sales: [],
+    todaySales: { sales: [], total: 0, count: 0 },
     salesOrders: [],
     productionOrders: [],
     products: [],
@@ -46,6 +47,7 @@ export function useReportsLogic() {
       // Load all reports in parallel
       const [
         sales,
+        todaySales,
         salesOrders,
         productionOrders,
         products,
@@ -55,6 +57,7 @@ export function useReportsLogic() {
         summary,
       ] = await Promise.all([
         reportsAPI.getSales(salesParams).catch(() => ({ data: [] })),
+        reportsAPI.getTodaySales().catch(() => ({ data: { sales: [], total: 0, count: 0 } })),
         reportsAPI.getSalesOrders(orderParams).catch(() => ({ data: [] })),
         reportsAPI.getProductionOrders(orderParams).catch(() => ({ data: [] })),
         reportsAPI.getProducts().catch(() => ({ data: [] })),
@@ -66,6 +69,7 @@ export function useReportsLogic() {
 
       setReports({
         sales: sales.data || [],
+        todaySales: todaySales.data || { sales: [], total: 0, count: 0 },
         salesOrders: salesOrders.data || [],
         productionOrders: productionOrders.data || [],
         products: products.data || [],

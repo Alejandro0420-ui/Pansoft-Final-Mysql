@@ -584,6 +584,55 @@ export default function inventoryRoutes(pool) {
             });
           }
 
+          // Calcular el total de la venta
+          const totalAmount = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+          // Parsear la fecha de factura (formato: DD/MM/YYYY)
+          let issueDate = new Date();
+          if (invoiceDate) {
+            const parts = invoiceDate.split('/');
+            if (parts.length === 3) {
+              issueDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+            } else {
+              issueDate = new Date(invoiceDate);
+            }
+          }
+
+          // Crear la factura en la base de datos
+          let invoiceId = null;
+          const now = new Date(); // Fecha y hora actual
+          try {
+            const [invoiceResult] = await connection.query(
+              `INSERT INTO invoices (invoice_number, issue_date, due_date, total_amount, status) 
+               VALUES (?, ?, ?, ?, ?)`,
+              [
+                invoiceNumber,
+                now, // Guardar fecha y hora
+                now, // due_date igual a issue_date por defecto
+                totalAmount,
+                'paid' // Las ventas del POS se consideran pagadas inmediatamente
+              ]
+            );
+            invoiceId = invoiceResult.insertId;
+            console.log(`[POST /process-sale] ✅ Factura creada: ${invoiceNumber} (ID: ${invoiceId})`);
+            
+            // Guardar los items de la factura
+            if (invoiceId && cart && cart.length > 0) {
+              for (const item of cart) {
+                const subtotal = item.price * item.quantity;
+                await connection.query(
+                  `INSERT INTO invoice_items (invoice_id, product_id, product_name, quantity, unit_price, subtotal)
+                   VALUES (?, ?, ?, ?, ?, ?)`,
+                  [invoiceId, item.id, item.name, item.quantity, item.price, subtotal]
+                );
+              }
+              console.log(`[POST /process-sale] ✅ Items guardados para factura ${invoiceNumber}`);
+            }
+          } catch (invoiceError) {
+            console.warn("[POST /process-sale] ⚠️ Error creando factura:", invoiceError.message);
+            // No fallamos la transacción por error al crear factura
+          }
+
           // Commit transacción
           await connection.query("COMMIT");
 
@@ -596,6 +645,8 @@ export default function inventoryRoutes(pool) {
             message: "Venta procesada exitosamente",
             invoiceNumber,
             invoiceDate,
+            invoiceId,
+            totalAmount,
             updatedProducts,
           });
         } catch (txError) {

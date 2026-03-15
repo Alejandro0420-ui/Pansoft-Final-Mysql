@@ -232,6 +232,8 @@ export const employeesAPI = {
 // Reports API
 export const reportsAPI = {
   getSales: (params) => api.get("/reports/sales", { params }),
+  getTodaySales: () => api.get("/reports/today-sales"),
+  getSaleDetail: (id, type) => api.get("/reports/sale-detail", { params: { id, type } }),
   getInventory: () => api.get("/reports/inventory"),
   getCustomers: () => api.get("/reports/customers"),
   getProductionOrders: (params) =>
