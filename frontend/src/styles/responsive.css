@@ -98,8 +98,8 @@
     padding: 0.25rem !important;
   }
 
-  /* Flex responsive */
-  .d-flex {
+  /* Flex responsive - only stack specific layout containers, NOT all flex */
+  .flex-stack-mobile {
     flex-direction: column;
   }
   .d-flex.gap-2 {
@@ -224,7 +224,8 @@
   }
 
   aside.sidebar-closed {
-    display: none !important;
+    transform: translateX(-100%);
+    visibility: hidden;
   }
 
   /* Tables */

@@ -533,11 +533,14 @@ aside nav {
   aside {
     position: relative !important;
     min-height: auto !important;
+    transform: none !important;
+    visibility: visible !important;
   }
 
   aside.sidebar-closed {
     transform: none;
     visibility: visible;
+    width: 0px;
   }
 }
 
@@ -559,6 +562,12 @@ header {
     padding: 0.5rem !important;
   }
 
+  /* Force menu button to stay on left */
+  header > div:first-child {
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+  }
+
   header .btn {
     width: 44px;
     height: 44px;
@@ -566,6 +575,7 @@ header {
     display: flex;
     align-items: center;
     justify-content: center;
+    margin-left: 0 !important;
   }
 
   header .btn-light:hover {

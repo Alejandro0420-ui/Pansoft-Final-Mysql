@@ -47,7 +47,10 @@ function App() {
       return !!localStorage.getItem("token");
     }
   });
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    // Inicialmente abierto en escritorio, cerrado en móvil
+    return window.innerWidth >= 768;
+  });
   const [unreadCount, setUnreadCount] = useState(0);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
@@ -72,6 +75,10 @@ function App() {
     const handleResize = () => {
       const mobile = window.innerWidth < 768;
       setIsMobile(mobile);
+      // Abrir sidebar automáticamente cuando vuelve a escritorio
+      if (!mobile) {
+        setSidebarOpen(true);
+      }
       // Cerrar sidebar en móvil
       if (mobile) {
         setSidebarOpen(false);
@@ -307,6 +314,23 @@ function AppContent({
         overflow: "hidden",
       }}
     >
+      {/* Backdrop for mobile sidebar */}
+      {sidebarOpen && isMobile && (
+        <div
+          className="sidebar-backdrop"
+          onClick={() => setSidebarOpen(false)}
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            zIndex: 1029,
+          }}
+        />
+      )}
+
       {/* Sidebar */}
       <aside
         className={`bg-white border-end ${sidebarOpen ? "sidebar-open" : "sidebar-closed"}`}
@@ -317,6 +341,7 @@ function AppContent({
           display: "flex",
           flexDirection: "column",
           borderRight: "1px solid #dee2e6",
+          zIndex: 1030,
         }}
       >
         {/* Logo */}
@@ -386,14 +411,16 @@ function AppContent({
             flexShrink: 0,
           }}
         >
-          <button
-            className="btn btn-sm btn-light d-md-none"
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            style={{ width: "44px", height: "44px", minWidth: "44px" }}
-            title={sidebarOpen ? "Cerrar menú" : "Abrir menú"}
-          >
-            {sidebarOpen ? <X size={22} /> : <Menu size={22} />}
-          </button>
+          <div className="d-flex align-items-center" style={{ marginLeft: 0 }}>
+            <button
+              className="btn btn-sm btn-light d-md-none"
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              style={{ width: "44px", height: "44px", minWidth: "44px", marginLeft: 0 }}
+              title={sidebarOpen ? "Cerrar menú" : "Abrir menú"}
+            >
+              {sidebarOpen ? <X size={22} /> : <Menu size={22} />}
+            </button>
+          </div>
 
           <div className="d-flex align-items-center gap-2 gap-sm-3 ms-auto">
             <button

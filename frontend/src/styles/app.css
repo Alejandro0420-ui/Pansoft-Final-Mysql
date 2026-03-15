@@ -479,7 +479,7 @@ div.modal-dialog {
     top: 0;
     left: 0;
     height: 100vh !important;
-    z-index: 999 !important;
+    z-index: 1030 !important;
     overflow-y: auto !important;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.2) !important;
   }
@@ -490,7 +490,8 @@ div.modal-dialog {
 
   aside.sidebar-closed {
     width: 0 !important;
-    display: none;
+    transform: translateX(-100%);
+    visibility: hidden;
   }
 
   main {
@@ -655,11 +656,16 @@ div.modal-dialog {
   aside {
     position: relative !important;
     height: auto !important;
+    transform: none !important;
+    visibility: visible !important;
   }
 
   aside.sidebar-closed {
     display: flex !important;
+    flex-direction: column !important;
     width: 0 !important;
+    transform: none !important;
+    visibility: visible !important;
   }
 
   /* Table responsive on medium screens */
