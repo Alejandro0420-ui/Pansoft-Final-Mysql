@@ -13,7 +13,12 @@ export default function suppliesRoutes(pool) {
   router.get("/", async (req, res) => {
     try {
       const [result] = await pool.query(
-        "SELECT * FROM supplies ORDER BY name ASC",
+        `SELECT 
+          s.*,
+          c.name as category
+        FROM supplies s
+        LEFT JOIN categories c ON s.category_id = c.id
+        ORDER BY s.name ASC`,
       );
       res.json(result);
     } catch (error) {
@@ -202,9 +207,15 @@ export default function suppliesRoutes(pool) {
   router.get("/:id", async (req, res) => {
     try {
       const { id } = req.params;
-      const [result] = await pool.query("SELECT * FROM supplies WHERE id = ?", [
-        id,
-      ]);
+      const [result] = await pool.query(
+        `SELECT 
+          s.*,
+          c.name as category
+        FROM supplies s
+        LEFT JOIN categories c ON s.category_id = c.id
+        WHERE s.id = ?`,
+        [id],
+      );
       res.json(result[0] || {});
     } catch (error) {
       console.error("Error al obtener insumo:", error);
@@ -256,15 +267,28 @@ export default function suppliesRoutes(pool) {
         });
       }
 
+      // Obtener category_id a partir del nombre
+      const [categoryResult] = await pool.query(
+        "SELECT id FROM categories WHERE name = ?",
+        [category],
+      );
+      const categoryId = categoryResult.length > 0 ? categoryResult[0].id : null;
+
+      if (!categoryId) {
+        return res.status(400).json({
+          error: `La categoría "${category}" no existe en el sistema`,
+        });
+      }
+
       const imageUrl = req.file ? `/images/${req.file.filename}` : null;
 
       const [result] = await pool.query(
-        "INSERT INTO supplies (name, sku, description, category, price, stock_quantity, min_stock_level, unit, image_url, expiry_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO supplies (name, sku, description, category_id, price, stock_quantity, min_stock_level, unit, image_url, expiry_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         [
           name,
           sku,
           description,
-          category,
+          categoryId,
           price,
           stock_quantity,
           min_stock_level,
@@ -306,8 +330,8 @@ export default function suppliesRoutes(pool) {
   // Update supply with movement history tracking
   router.put("/:id", upload.single("image"), async (req, res) => {
     let connection;
+    const { id } = req.params;
     try {
-      const { id } = req.params;
       const {
         name,
         sku,
@@ -360,32 +384,65 @@ export default function suppliesRoutes(pool) {
       await connection.query("START TRANSACTION");
 
       try {
-        // Build base update query with or without description
-        let updateFields = [
-          "name=?",
-          "sku=?",
-          "category=?",
-          "price=?",
-          "stock_quantity=?",
-          "min_stock_level=?",
-          "unit=?",
-          "expiry_date=?",
-        ];
-        let params = [
-          name,
-          sku,
-          category,
-          parseFloat(price) || 0,
-          newQuantity,
-          parseInt(min_stock_level) || 0,
-          unit,
-          expiry_date || null,
-        ];
+        // Convertir category (nombre string) a category_id si se proporciona
+        let categoryId = null;
+        if (category) {
+          const [categoryResult] = await connection.query(
+            "SELECT id FROM categories WHERE name = ?",
+            [category],
+          );
+          if (categoryResult.length === 0) {
+            await connection.query("ROLLBACK");
+            await connection.release();
+            return res.status(400).json({
+              error: `La categoría "${category}" no existe en el sistema`,
+            });
+          }
+          categoryId = categoryResult[0].id;
+        }
+
+        // Build dynamic update query - solo actualizar campos que se proporcionan
+        let updateFields = [];
+        let params = [];
+
+        // Solo agregar campos si se proporcionan valores válidos
+        if (name !== undefined && name !== null) {
+          updateFields.push("name=?");
+          params.push(name);
+        }
+        if (sku !== undefined && sku !== null) {
+          updateFields.push("sku=?");
+          params.push(sku);
+        }
+        if (categoryId !== null) {
+          updateFields.push("category_id=?");
+          params.push(categoryId);
+        }
+        if (price !== undefined && price !== null) {
+          updateFields.push("price=?");
+          params.push(parseFloat(price) || 0);
+        }
+        // Siempre actualizar stock_quantity
+        updateFields.push("stock_quantity=?");
+        params.push(newQuantity);
+
+        if (min_stock_level !== undefined && min_stock_level !== null) {
+          updateFields.push("min_stock_level=?");
+          params.push(parseInt(min_stock_level) || 0);
+        }
+        if (unit !== undefined && unit !== null) {
+          updateFields.push("unit=?");
+          params.push(unit);
+        }
+        if (expiry_date !== undefined && expiry_date !== null) {
+          updateFields.push("expiry_date=?");
+          params.push(expiry_date);
+        }
 
         // Agregar description solo si se proporciona
         if (description !== undefined && description !== null) {
-          updateFields.splice(2, 0, "description=?");
-          params.splice(2, 0, description);
+          updateFields.push("description=?");
+          params.push(description);
         }
 
         // Agregar supplier_id si existe en la tabla
@@ -456,7 +513,12 @@ export default function suppliesRoutes(pool) {
         console.log(`[PUT /supplies/${id}] ✅ Actualización exitosa`);
 
         const [updatedSupplies] = await connection.query(
-          "SELECT * FROM supplies WHERE id = ?",
+          `SELECT 
+            s.*,
+            c.name as category
+          FROM supplies s
+          LEFT JOIN categories c ON s.category_id = c.id
+          WHERE s.id = ?`,
           [id],
         );
 

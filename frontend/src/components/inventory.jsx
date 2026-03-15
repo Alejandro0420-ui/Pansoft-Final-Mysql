@@ -105,7 +105,8 @@ export function Inventory() {
       console.log(`📥 Respuesta Inventory: ${inventoryRes.status}`);
       console.log(`📥 Respuesta Supplies: ${suppliesRes.status}`);
 
-      let allMovements = [];
+      let inventoryMovements = [];
+      let suppliesMovements = [];
 
       // Procesar movimientos de inventory
       if (inventoryRes.ok) {
@@ -113,7 +114,7 @@ export function Inventory() {
         console.log(`📥 Datos de inventory recibidos:`, inventoryData);
 
         if (inventoryData.data && Array.isArray(inventoryData.data)) {
-          const inventoryMovements = inventoryData.data.map((movement) => ({
+          inventoryMovements = inventoryData.data.map((movement) => ({
             id: `inv-${movement.id}`,
             date: new Date(movement.created_at).toISOString().split("T")[0],
             product: movement.product_name,
@@ -128,7 +129,7 @@ export function Inventory() {
             product_id: movement.product_id,
             isSupply: false,
           }));
-          allMovements = allMovements.concat(inventoryMovements);
+          console.log(`📥 ${inventoryMovements.length} movimientos de inventory procesados`);
         }
       } else {
         console.warn(`⚠️ Inventory API retornó estado: ${inventoryRes.status}`);
@@ -140,7 +141,7 @@ export function Inventory() {
         console.log(`📥 Datos de supplies recibidos:`, suppliesData);
 
         if (suppliesData.data && Array.isArray(suppliesData.data)) {
-          const suppliesMovements = suppliesData.data.map((movement) => ({
+          suppliesMovements = suppliesData.data.map((movement) => ({
             id: `sup-${movement.id}`,
             date: new Date(movement.created_at).toISOString().split("T")[0],
             product: movement.supply_name,
@@ -155,21 +156,25 @@ export function Inventory() {
             product_id: movement.supply_id,
             isSupply: true,
           }));
-          allMovements = allMovements.concat(suppliesMovements);
+          console.log(`📥 ${suppliesMovements.length} movimientos de supplies procesados`);
         }
       } else {
         console.warn(`⚠️ Supplies API retornó estado: ${suppliesRes.status}`);
       }
 
-      // Ordenar por fecha descendente
-      allMovements.sort(
+      // Ordenar cada array por fecha descendente
+      inventoryMovements.sort(
+        (a, b) => new Date(b.created_at) - new Date(a.created_at),
+      );
+      suppliesMovements.sort(
         (a, b) => new Date(b.created_at) - new Date(a.created_at),
       );
 
-      setMovements(allMovements);
-      setSupplyMovements(allMovements);
+      // Asignar correctamente a cada estado
+      setMovements(inventoryMovements);
+      setSupplyMovements(suppliesMovements);
       console.log(
-        `✅ Historial cargado: ${allMovements.length} movimientos totales`,
+        `✅ Historial cargado: ${inventoryMovements.length} producidos, ${suppliesMovements.length} insumos`,
       );
     } catch (error) {
       console.error("❌ Error fetching movement history:", error);

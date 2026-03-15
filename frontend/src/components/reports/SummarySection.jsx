@@ -31,15 +31,7 @@ export function SummarySection({ summary = {} }) {
           bgColor="rgba(255, 152, 0, 0.1)"
         />
       </div>
-      <div className="col-md-3 mb-3">
-        <StatCard
-          title="Clientes"
-          value={summary.total_customers || 0}
-          icon={Users}
-          color="#e91e63"
-          bgColor="rgba(233, 30, 99, 0.1)"
-        />
-      </div>
+      
     </div>
   );
 }

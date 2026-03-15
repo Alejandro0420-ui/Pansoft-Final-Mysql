@@ -9,7 +9,6 @@ export function useReportsLogic() {
     productionOrders: [],
     products: [],
     employees: [],
-    customers: [],
     inventory: [],
     summary: {},
   });
@@ -52,7 +51,6 @@ export function useReportsLogic() {
         productionOrders,
         products,
         employees,
-        customers,
         inventory,
         summary,
       ] = await Promise.all([
@@ -62,7 +60,6 @@ export function useReportsLogic() {
         reportsAPI.getProductionOrders(orderParams).catch(() => ({ data: [] })),
         reportsAPI.getProducts().catch(() => ({ data: [] })),
         reportsAPI.getEmployees().catch(() => ({ data: [] })),
-        reportsAPI.getCustomers().catch(() => ({ data: [] })),
         reportsAPI.getInventory().catch(() => ({ data: [] })),
         reportsAPI.getSummary().catch(() => ({ data: {} })),
       ]);
@@ -74,7 +71,6 @@ export function useReportsLogic() {
         productionOrders: productionOrders.data || [],
         products: products.data || [],
         employees: employees.data || [],
-        customers: customers.data || [],
         inventory: inventory.data || [],
         summary: summary.data || {},
       });

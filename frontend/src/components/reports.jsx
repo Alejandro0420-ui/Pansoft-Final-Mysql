@@ -7,7 +7,6 @@ import { SalesOrdersSection } from "./reports/SalesOrdersSection";
 import { ProductionOrdersSection } from "./reports/ProductionOrdersSection";
 import { ProductsSection } from "./reports/ProductsSection";
 import { EmployeesSection } from "./reports/EmployeesSection";
-import { CustomersSection } from "./reports/CustomersSection";
 import { InventorySection } from "./reports/InventorySection";
 import { RefreshCw } from "lucide-react";
 
@@ -75,8 +74,6 @@ export function Reports() {
           <ProductsSection data={reports.products} />
 
           <EmployeesSection data={reports.employees} />
-
-          <CustomersSection data={reports.customers} />
 
           <InventorySection data={reports.inventory} />
         </>
