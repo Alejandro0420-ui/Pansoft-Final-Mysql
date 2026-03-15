@@ -10,7 +10,7 @@ services:
     volumes:
       - db_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-pPansoftRoot2026zR7wBv"]
+      test: [CMD, mysqladmin, ping, -h, localhost, -uroot, -pPansoftRoot2026zR7wBv]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -27,7 +27,7 @@ services:
     env_file:
       - .env
     ports:
-      - "5000:5000"
+      - 5000:5000
     depends_on:
       db:
         condition: service_healthy
@@ -43,7 +43,7 @@ services:
     container_name: pansoft_frontend
     restart: unless-stopped
     ports:
-      - "80:80"
+      - 80:80
     depends_on:
       - backend
     networks:
@@ -58,7 +58,7 @@ services:
       PMA_USER: root
       PMA_PASSWORD: PansoftRoot2026zR7wBv
     ports:
-      - "8082:80"
+      - 8082:80
     depends_on:
       db:
         condition: service_healthy
