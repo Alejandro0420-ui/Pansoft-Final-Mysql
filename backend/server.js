@@ -116,8 +116,7 @@ app.get("/api/health", (req, res) => {
 // En producción, se sirve desde la carpeta dist/
 if (process.env.NODE_ENV === "production") {
   const distPath = path.join(__dirname, "dist");
-  const fs = require("fs");
-  
+
   if (fs.existsSync(distPath)) {
     app.use(express.static(distPath));
     app.get("*", (req, res) => {
